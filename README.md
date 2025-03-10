@@ -6,8 +6,7 @@ In particular, it contains a class for building differentially private Random Fo
 
 ## Setup and dependencies
 
-The proposed dataset reconstruction attack against Differentially Private Random Forests is based upon a Constraint Programming formulation, and uses the`OR-Tools` CP-SAT solver to solve it. Setup instructions are available on:
-    * https://developers.google.com/optimization/install/python
+The proposed dataset reconstruction attack against Differentially Private Random Forests is based upon a Constraint Programming formulation, and uses the`OR-Tools` CP-SAT solver to solve it. Setup instructions are available on: [here](https://developers.google.com/optimization/install/python)
  
 The other necessary libraries for the proper functioning of the various modules are listed in the `requirements.txt` file.
 
