@@ -7,6 +7,17 @@ from scipy import integrate as intg
 import sklearn
 
 
+class MySolutionCallback(cp_model.CpSolverSolutionCallback):
+    def __init__(self):
+        cp_model.CpSolverSolutionCallback.__init__(self)
+        self.start_time = time.time() # Recalls start time
+        self.first_sol = True
+
+    def on_solution_callback(self):
+        if self.first_sol:
+            self.first_sol = False
+            self.time_to_first_sol = time.time() - self.start_time
+
 class DP_RF_solver:
     def __init__(self, clf,eps):
         self.clf = clf
@@ -107,11 +118,14 @@ class DP_RF_solver:
             print("Parsing done")
         return trees_branches
     
-    def fit(self, N_fixed, seed, time_out, n_threads=0, verbosity=0, obj_active=1):
+    def fit(self, N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_known = None, known_attributes=[]):
         start = time.time()
         
         model = cp_model.CpModel()
         
+        if verbosity:
+            print("Constructing CP model.")
+
         # Model creation
         nb_noise = self.format_nb()
         card_c = self.clf.n_classes_
@@ -222,6 +236,9 @@ class DP_RF_solver:
                 
                 
         else:
+            if verbosity:
+                print("For N_fixed.")
+
             N = N_fixed
                 
             # Variables definitions
@@ -235,9 +252,24 @@ class DP_RF_solver:
             y = [[[[model.NewBoolVar('y_%d_%d_%d_%d' % (t,v,k,c)) for c in range(card_c)] for k in range(N)] for v in range(N_leaves)] for t in range(N_trees)]
             z = [[model.NewBoolVar('Z_%d_%d' % (i, c)) for c in range(card_c)] for i in range(N)]
             
+            # Assume knowledge of dataset
+            if not(X_known is None):
+                assert(X_known.shape[1] >= len(known_attributes))
+                assert(X_known.shape[1] == M) # not mandatory actually but that's what I do in the experiments
+                assert(X_known.shape[0] == N)
+
+                for i in known_attributes:
+                    for k in range(N):
+                        model.Add( x[k][i] == X_known[k][i] )
+            # ----------------------------------------------------------------------------------------------
+
+
             delta_bool_list = [[[[model.NewBoolVar(f'delta_val_{i}_{t}_{v}_{c}') for i in range(0, bound+1)] for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)]
             abs_delta = [[[model.NewIntVar(0, bound, 'delta_%d_%d_%d' % (t, v, c)) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] 
                 
+            if verbosity:
+                print("Created variables.")
+
             for t in range(N_trees):
                 #Constraint ensuring that all trees have N training examples
                 model.Add(sum(nb[t][v][c] for v in range(N_leaves) for c in range(card_c)) == N)
@@ -263,7 +295,9 @@ class DP_RF_solver:
                         # Constraint ensuring that nb[t][v][c] is positif or null
                         model.Add(nb[t][v][c] >= 0)  
 
-            
+            if verbosity:
+                print("Created tree constraints.")
+
             # Each example is assigned to only one class 
             for k in range(N):
                 model.Add(sum(z[k][c] for c in range(card_c)) == 1)
@@ -278,6 +312,10 @@ class DP_RF_solver:
                     for c in range(card_c):
                         model.Add(sum(y[t][v][k][c] for v in range(N_leaves)) == z[k][c])
                     
+            if verbosity:
+                print("Created other constraints.")
+
+
             #The values of the features align with the splits of the branch
             ex_k_not_classified_by_leaf_v_in_tree_t = [[[model.NewBoolVar(f'ex_k_not_classified_by_leaf_v_in_tree_t{t}_{v}_{k}_{c}') for k in range(N)] for v in range(N_leaves)] for t in range(N_trees)]
             for idx_tree, liste_branches in enumerate(trees_branches):
@@ -293,20 +331,26 @@ class DP_RF_solver:
                             if feature < 0:
                                 model.Add(x[k][abs(feature)-1] == 0).OnlyEnforceIf(ex_k_not_classified_by_leaf_v_in_tree_t[idx_tree][idx_branch][k].Not())
             
-            
+            if verbosity:
+                print("Created other constraints bis.")
+
             #The counts correspond to the number of assigned examples
             for t in range(N_trees):
                 for v in range(N_leaves):
                     for c in range(card_c):
                         model.Add(sum(y[t][v][k][c] for k in range(N)) == nb[t][v][c])
             
-                                    
+            if verbosity:
+                print("Created other constraints ter.")
+                        
             #OHE Constraint
             for k in range(N):
                 for w in range(len(one_hot_encoded_groups)): # for each group of binary attributes one-hot encoding the same attribute
                     model.Add(cp_model.LinearExpr.Sum([x[k][i] for i in one_hot_encoded_groups[w]]) == 1)
         
-        
+        if verbosity:
+            print("Beginning search.")
+
         # Solver creation
         solver = cp_model.CpSolver()
 
@@ -318,8 +362,12 @@ class DP_RF_solver:
         if obj_active:
             model.Maximize(cp_model.LinearExpr.WeightedSum(liste_bool, liste_p))
             
+        # Create the callback used to log time to first solution
+        solcallback = MySolutionCallback()
+
         # Solving the problem
-        solver.Solve(model)
+        #solver.Solve(model)
+        solver.SolveWithSolutionCallback(model, solcallback)
         solver.ResponseStats()
         
         end = time.time()
@@ -335,8 +383,8 @@ class DP_RF_solver:
                 print("N :", N)
             
             x = [[solver.Value(x[k][i]) for i in range(M)] for k in range(N)]
-            if verbosity:
-                print("x_sol :", x)
+            #if verbosity:
+            #    print("x_sol :", x)
             
             y = [[[solver.Value(y[t][v][k][c]) for c in range(card_c)] for k in range(N)] for v in range(N_leaves) for t in range(N_trees)]
             #print("y :", y)
@@ -355,13 +403,13 @@ class DP_RF_solver:
             
             values_nb = [[[solver.Value(nb[t][v][c]) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)]
             
-            if verbosity:
-                print("Bruite :", nb_noise)
-                print("Recons :", values_nb)
+            #if verbosity:
+            #    print("Bruite :", nb_noise)
+            #    print("Recons :", values_nb)
             
-            self.result_dict = {'status':solver.StatusName(), 'nb_recons': values_nb, 'duration': duration, 'reconstructed_data':x, 'N_min': N_min, 'N_max': N_max, 'N' : N}
+            self.result_dict = {'status':solver.StatusName(), 'nb_recons': values_nb, 'duration': duration, 'reconstructed_data':x, 'N_min': N_min, 'N_max': N_max, 'N' : N, 'time_to_first_solution' : solcallback.time_to_first_sol}
 
         else :
-            self.result_dict = {'status':solver.StatusName(), 'duration': duration, }
+            self.result_dict = {'status':solver.StatusName(), 'duration': duration}
         
         return self.result_dict

@@ -95,7 +95,7 @@ Here is a description of the various files:
 
 * `baseline.py` calculates the random baseline for reconstruction error and training accuracy. The data is then added to `datasets_infos.py`
 
-* The `experiments_results` and `figures` directories contain all the results of the experiments and associated figures.
+* The `experiments_results` and `figures` (or `tables`) directories contain all the results of the experiments and associated figures.
 
 * `run_experiments.py` and `run_experiments_batch.sh` allow reproduction of the obtained results.
 
@@ -103,4 +103,12 @@ Here is a description of the various files:
 
 * `plots_others.py` reproduces the remaining figures appearing in the paper.
 
-* `table1.py` and `plot_fig2.py` can be used to generate Table 1 and Figure 2 (respectively) appearing in the paper
+* `table1.py` and `plot_fig2.py` can be used to generate Table 1 and Figure 2 (respectively) appearing in the paper.
+
+* `run_experiments_scalability.py` and `run_experiments_scalability_batch.sh` allow reproduction of the obtained results for the scalability appendix.
+
+* `table_scalability.py` produces the tables for the scalability appendix.
+
+* `run_experiments_partial_reconstr.py` and `run_experiments_partial_reconstr_batch.sh` allow reproduction of the obtained results for the partial reconstruction appendix.
+
+* `plot_results_partial_reconstr.py` reproduces the figures for the partial reconstruction appendix.
