@@ -8,15 +8,24 @@ import sklearn
 
 
 class MySolutionCallback(cp_model.CpSolverSolutionCallback):
-    def __init__(self):
+    def __init__(self, x_vars, M, N):
         cp_model.CpSolverSolutionCallback.__init__(self)
         self.start_time = time.time() # Recalls start time
         self.first_sol = True
+        self.sol_list = []
+        self.time_list = []
+        self.x_var = [[ x_vars[k][i] for i in range(M)] for k in range(N)]
+        self.M = M
+        self.N = N
 
     def on_solution_callback(self):
+        sol_time = time.time() - self.start_time
         if self.first_sol:
             self.first_sol = False
-            self.time_to_first_sol = time.time() - self.start_time
+            self.time_to_first_sol = sol_time
+        x_sol = [[self.Value(self.x_var[k][i]) for i in range(self.M)] for k in range(self.N)]
+        self.sol_list.append(x_sol)
+        self.time_list.append(sol_time)
 
 class DP_RF_solver:
     def __init__(self, clf,eps):
@@ -363,7 +372,7 @@ class DP_RF_solver:
             model.Maximize(cp_model.LinearExpr.WeightedSum(liste_bool, liste_p))
             
         # Create the callback used to log time to first solution
-        solcallback = MySolutionCallback()
+        solcallback = MySolutionCallback(x, M, N)
 
         # Solving the problem
         #solver.Solve(model)
@@ -407,7 +416,7 @@ class DP_RF_solver:
             #    print("Bruite :", nb_noise)
             #    print("Recons :", values_nb)
             
-            self.result_dict = {'status':solver.StatusName(), 'nb_recons': values_nb, 'duration': duration, 'reconstructed_data':x, 'N_min': N_min, 'N_max': N_max, 'N' : N, 'time_to_first_solution' : solcallback.time_to_first_sol}
+            self.result_dict = {'status':solver.StatusName(), 'nb_recons': values_nb, 'duration': duration, 'reconstructed_data':x, 'N_min': N_min, 'N_max': N_max, 'N' : N, 'time_to_first_solution' : solcallback.time_to_first_sol, 'anytime_sols' : solcallback.sol_list, 'anytime_sols_times' : solcallback.time_list}
 
         else :
             self.result_dict = {'status':solver.StatusName(), 'duration': duration}
