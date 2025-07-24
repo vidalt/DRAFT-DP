@@ -48,7 +48,7 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 import random
 
-def average_error(x_sol, x_train, seed):
+def average_error(x_sol, x_train, seed, return_all_distances=False):
     """
     Computes the average reconstruction error between the proposed reconstruction x_sol and the actual training set x_train.
     If the dimensions of x_sol and x_train are the same, the function proceeds as usual.
@@ -94,13 +94,23 @@ def average_error(x_sol, x_train, seed):
     cost = matrice_matching(x_sol_array, x_train_array)
     row_ind, col_ind = linear_sum_assignment(cost)
 
+    if return_all_distances:
+        all_distances = []
+
     total_distance = 0
     for i, j in zip(row_ind, col_ind):
-        total_distance += dist_individus(x_sol_array[i], x_train_array[j])
+        a_dist = dist_individus(x_sol_array[i], x_train_array[j])
+        if return_all_distances:
+            all_distances.append(a_dist)
+        total_distance += a_dist
 
 
     average_distance = total_distance / len(row_ind)
-    return average_distance, col_ind.tolist()
+
+    if return_all_distances:
+        return average_distance, col_ind.tolist(), all_distances
+    else: 
+        return average_distance, col_ind.tolist()
 
 
 def generate_random_sols(N,M, dataset_ohe_groups=[], n_sols=10, seed=42):
