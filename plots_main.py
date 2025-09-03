@@ -14,7 +14,7 @@ import matplotlib.gridspec as gridspec
 for N in {'N_fixed'}:
     for dataset in ["compas", "adult", "default_credit"]:
         
-        with open(f'experiments_results/{N}_{dataset}_results.json', 'r') as f:
+        with open(f'experiments_results/Results_main_paper/{N}_{dataset}_results.json', 'r') as f:
             results = json.load(f)
 
 
@@ -219,7 +219,7 @@ def adjust_marker_size(epsilon, min_epsilon, max_epsilon):
 
 for N in {'N_fixed'}:
     for dataset in ["compas", "adult", "default_credit"]:
-        with open(f'experiments_results/{N}_{dataset}_results.json', 'r') as f:
+        with open(f'experiments_results/Results_main_paper/{N}_{dataset}_results.json', 'r') as f:
             results = json.load(f)
 
         script_seed = 42

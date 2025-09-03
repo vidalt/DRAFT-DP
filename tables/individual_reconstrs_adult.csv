@@ -1,0 +1,7 @@
+Epsilon,Reconstr_Error_Avg+-Reconstr_Error_Std,NB_PERFECT_AVG+-NB_PERFECT_STD,WORST_AVG+-WORST_STD,INLIERS_ERR_AVG+-INLIERS_ERR_STD,OUTLIERS_ERR_AVG+-OUTLIERS_ERR_STD,INLIERS_PROP_PERFECT_AVG+-INLIERS_PROP_PERFECT_STD,OUTLIERS_PROP_PERFECT_AVG+-OUTLIERS_PROP_PERFECT_STD,OUTLIERS_PROP_AVG+-OUTLIERS_PROP_STD
+30,$0.088 \pm 0.002$,$14.6 \pm 2.4$,$0.274 \pm 0.021$,$0.071 \pm 0.004$,$0.112 \pm 0.004$,$17.7 \pm 3.1$,$10.0 \pm 3.5$,$0.400 \pm 0.000$
+20,$0.090 \pm 0.003$,$16.2 \pm 2.3$,$0.337 \pm 0.042$,$0.071 \pm 0.006$,$0.119 \pm 0.005$,$22.0 \pm 2.9$,$7.5 \pm 4.7$,$0.400 \pm 0.000$
+10,$0.100 \pm 0.004$,$12.0 \pm 3.6$,$0.347 \pm 0.042$,$0.082 \pm 0.007$,$0.127 \pm 0.007$,$16.0 \pm 4.4$,$6.0 \pm 3.4$,$0.400 \pm 0.000$
+5,$0.122 \pm 0.005$,$6.6 \pm 2.0$,$0.368 \pm 0.000$,$0.099 \pm 0.002$,$0.156 \pm 0.012$,$9.7 \pm 2.4$,$2.0 \pm 1.9$,$0.400 \pm 0.000$
+1,$0.199 \pm 0.013$,$2.2 \pm 1.5$,$0.442 \pm 0.026$,$0.184 \pm 0.017$,$0.222 \pm 0.013$,$3.3 \pm 2.8$,$0.5 \pm 1.0$,$0.400 \pm 0.000$
+0.1,$0.291 \pm 0.029$,$0.0 \pm 0.0$,$0.474 \pm 0.047$,$0.298 \pm 0.032$,$0.280 \pm 0.026$,$0.0 \pm 0.0$,$0.0 \pm 0.0$,$0.400 \pm 0.000$

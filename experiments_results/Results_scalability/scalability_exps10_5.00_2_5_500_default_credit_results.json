@@ -1,0 +1,24 @@
+[
+    {
+        "N_samples": 500,
+        "N_trees": 10,
+        "epsilon": 5,
+        "epsilon_etape": 0.5,
+        "obj_active": 1,
+        "reconstruction_error": "NA",
+        "duration": 36177.12541246414,
+        "solver_status": "UNKNOWN",
+        "N_reconstruit": "NA",
+        "accuracy_train": 0.812,
+        "accuracy_test": 0.7825747812521197,
+        "dataset": "data/default_credit.csv",
+        "time_out": 36000,
+        "check_ohe": "NA",
+        "succes_total_debruitage": "NA",
+        "seed": 2,
+        "depth": 5,
+        "id": 97,
+        "Random_Baseline": 0.23550317460315973,
+        "Random_Baseline_Std": 0.0007658459169649873
+    }
+]

@@ -1,0 +1,22 @@
+[
+    {
+        "N_samples": 400,
+        "N_trees": 10,
+        "epsilon": 5,
+        "epsilon_etape": 0.5,
+        "obj_active": 1,
+        "reconstruction_error": "NA",
+        "duration": 18142.755023002625,
+        "solver_status": "UNKNOWN",
+        "N_reconstruit": "NA",
+        "accuracy_train": 0.715,
+        "accuracy_test": 0.6523655598001763,
+        "dataset": "data/compas.csv",
+        "time_out": 18000,
+        "check_ohe": "NA",
+        "succes_total_debruitage": "NA",
+        "seed": 1,
+        "depth": 5,
+        "id": 76
+    }
+]

@@ -37,14 +37,14 @@ class DP_RF_solver:
 
     def interval_N(self):
         nb = self.format_nb()
-        N_avg = round(sum(nb[t][v][c] for t in range(self.N_trees) for v in range(len(nb[0])) for c in range(self.clf.n_classes_)) / self.N_trees)
+        N_avg = round(sum(nb[t][v][c] for t in range(self.clf.N_trees) for v in range(len(nb[0])) for c in range(self.clf.n_classes_)) / self.clf.N_trees)
         t = [6.314, 2.920, 2.353, 2.132, 2.015, 1.943, 1.895, 1.860, 1.833, 1.812, 1.796, 1.782, 1.771, 1.761, 1.753, 1.746, 1.740, 1.734, 1.729, 1.725, 1.721, 1.717, 1.714, 1.711, 1.708, 1.706, 1.703, 1.701, 1.699, 1.697]
         N_leaves = 2 ** self.clf.estimators_[0].tree_.max_depth
         N_classes = self.clf.n_classes_
         std = np.sqrt(2.0 * N_leaves * N_classes) / self.eps
-        bound_inf = int(N_avg - t[self.N_trees - 2] * std)
-        bound_sup = int(N_avg + t[self.N_trees - 2] * std)
-        return bound_inf, bound_sup
+        bound_inf = int(N_avg - t[self.clf.N_trees - 2] * std)
+        bound_sup = int(N_avg + t[self.clf.N_trees - 2] * std)
+        return N_avg, bound_inf, bound_sup
     
     def log_liste_laplace(self):
         #bound = round(12 / self.eps_v)
@@ -150,7 +150,7 @@ class DP_RF_solver:
         N_max = 0
         
         if N_fixed is None:
-            N_avg, N_min, N_max = self.interval_N(self.clf, self.eps_v, self.N_trees)
+            N_avg, N_min, N_max = self.interval_N() #self.clf, self.eps_v, N_trees
             if verbosity:
                 print('N_avg', N_avg,'N_max :', N_max, "N_min :", N_min)
             
@@ -370,14 +370,17 @@ class DP_RF_solver:
 
         if obj_active:
             model.Maximize(cp_model.LinearExpr.WeightedSum(liste_bool, liste_p))
-            
-        # Create the callback used to log time to first solution
-        solcallback = MySolutionCallback(x, M, N)
 
-        # Solving the problem
-        #solver.Solve(model)
-        solver.SolveWithSolutionCallback(model, solcallback)
-        solver.ResponseStats()
+        if N_fixed is None:   
+            solver.Solve(model)
+        else:
+            # Create the callback used to log time to first solution
+            solcallback = MySolutionCallback(x, M)
+
+            # Solving the problem
+            #solver.Solve(model)
+            solver.SolveWithSolutionCallback(model, solcallback)
+            solver.ResponseStats()
         
         end = time.time()
         duration = end - start
@@ -415,8 +418,10 @@ class DP_RF_solver:
             #if verbosity:
             #    print("Bruite :", nb_noise)
             #    print("Recons :", values_nb)
-            
-            self.result_dict = {'status':solver.StatusName(), 'nb_recons': values_nb, 'duration': duration, 'reconstructed_data':x, 'N_min': N_min, 'N_max': N_max, 'N' : N, 'time_to_first_solution' : solcallback.time_to_first_sol, 'anytime_sols' : solcallback.sol_list, 'anytime_sols_times' : solcallback.time_list}
+            if N_fixed is None:
+                self.result_dict = {'status':solver.StatusName(), 'nb_recons': values_nb, 'duration': duration, 'reconstructed_data':x, 'N_min': N_min, 'N_max': N_max, 'N' : N}
+            else:
+                self.result_dict = {'status':solver.StatusName(), 'nb_recons': values_nb, 'duration': duration, 'reconstructed_data':x, 'N_min': N_min, 'N_max': N_max, 'N' : N, 'time_to_first_solution' : solcallback.time_to_first_sol, 'anytime_sols' : solcallback.sol_list, 'anytime_sols_times' : solcallback.time_list}
 
         else :
             self.result_dict = {'status':solver.StatusName(), 'duration': duration}

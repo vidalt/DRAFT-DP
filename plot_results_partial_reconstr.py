@@ -7,7 +7,7 @@ import numpy as np
 figures_sizes = (7.0,4.0)
  #"milp" or "cp-sat" or "bench"
 list_datasets = ['compas','default_credit', 'adult']
-folder = "experiments_results/results_partial_reconstruction/partial_reconstr_exps"
+folder = "experiments_results/Results_partial_reconstruction/partial_reconstr_exps"
 nattrs_datasets = {"compas":14-4-3, "adult":19-5, "default_credit":21-3-2} # All attributes OHEncoding the same original feature count only once
 
 for dataset in list_datasets:

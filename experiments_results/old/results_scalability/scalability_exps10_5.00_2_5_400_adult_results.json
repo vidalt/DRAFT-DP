@@ -1,0 +1,23 @@
+[
+    {
+        "N_samples": 400,
+        "N_trees": 10,
+        "epsilon": 5,
+        "epsilon_etape": 0.5,
+        "obj_active": 1,
+        "reconstruction_error": 0.10078947368421068,
+        "time_to_first_solution": 9142.400449752808,
+        "duration": 36140.10913825035,
+        "solver_status": "FEASIBLE",
+        "N_reconstruit": 400,
+        "accuracy_train": 0.755,
+        "accuracy_test": 0.7749060732422278,
+        "dataset": "data/adult.csv",
+        "time_out": 36000,
+        "check_ohe": true,
+        "succes_total_debruitage": false,
+        "seed": 2,
+        "depth": 5,
+        "id": 27
+    }
+]

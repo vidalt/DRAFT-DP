@@ -12,9 +12,9 @@ random_reconstruction_error = {"compas": 0.2081, "adult": 0.2539, "default_credi
 table_data = {dataset: {n_trees: {epsilon: {depth: "-" for depth in depth_values} for epsilon in epsilon_values} for n_trees in tree_values} for dataset in datasets}
 
 for dataset in datasets:
-    with open(f'experiments_results/N_fixed_{dataset}_results.json', 'r') as f:
+    with open(f'experiments_results/Results_main_paper/N_fixed_{dataset}_results.json', 'r') as f:
         results = json.load(f)
-    
+
     for depth in depth_values:
         for n_trees in tree_values:
             for epsilon in epsilon_values:
@@ -22,9 +22,12 @@ for dataset in datasets:
                 for seed in range(5):
                     for result in results:
                         if (result['depth'] == depth and result['epsilon'] == epsilon 
-                                and result['N_trees'] == n_trees and result['solver_status'] != 'UNKNOWN'):
+                                and result['N_trees'] == n_trees and result['solver_status'] != 'UNKNOWN')\
+                                    and result['seed'] == seed:
                             error.append(result['reconstruction_error'])
                 
+                if error:
+                    assert(len(error) == 5)
                 mean_error = np.mean(error) if error else "-"
                 if mean_error != "-" and mean_error > random_reconstruction_error[dataset]:
                     table_data[dataset][n_trees][epsilon][depth] = f"\\textbf{{{mean_error:.2f}}}"

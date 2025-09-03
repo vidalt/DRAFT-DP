@@ -235,7 +235,7 @@ for N in ['N_fixed']:
         rd_acc = random_predictions_accuracy[dataset]
         
         # Load results from JSON file
-        with open(f'experiments_results/{N}_{dataset}_results.json', 'r') as f:
+        with open(f'experiments_results/Results_main_paper/{N}_{dataset}_results.json', 'r') as f:
             results = json.load(f)
             
             # Iterate through results to extract epsilon, N_trees, and accuracy_train
@@ -265,7 +265,7 @@ for N in ['N_fixed']:
         legend_line = Line2D([0], [0], color='black', linestyle='-', linewidth=2)
         plt.legend([legend_line], [f'Majority Classifier Accuracy: {rd_acc:.2f}'], loc='upper center', bbox_to_anchor=(0.5, -0.05), fontsize='large', frameon=False)
         
-        plt.savefig(f'figures/{N}_{dataset}_heatmap_depth7.pdf', bbox_inches='tight')
+        plt.savefig(f'figures/{N}_{dataset}_heatmap_train_depth7.pdf', bbox_inches='tight')
         plt.clf()
 
 
@@ -393,7 +393,7 @@ for removed_feat in [0,1,2,3]:
             # parses the text line by line
             clean_counts = [[r'\textcolor{red}{\st{1}} ', r'\textcolor{red}{\st{0}} ', r'\textcolor{red}{\st{1}} ', r'\textcolor{red}{\st{0}} '], [r'\textcolor{red}{\st{0}} ', r'\textcolor{red}{\st{1}} ', r'\textcolor{red}{\st{1}} ', r'\textcolor{red}{\st{0}} ']]
             noisy_counts = [[r'\textcolor{blue}{\textbf{1}}' , r'\textcolor{blue}{\textbf{1}}', r'\textcolor{blue}{\textbf{1}}', r'\textcolor{blue}{\textbf{0}}'], [r'\textcolor{blue}{\textbf{0}}', r'\textcolor{blue}{\textbf{1}}', r'\textcolor{blue}{\textbf{3}}', r'\textcolor{blue}{\textbf{1}}']]
-            lines = ["$f_1 \leq 0.573$", "$f_2 \leq 0.421$", "$f_3 \leq 0.545$"]
+            lines = ["$x_1 \leq 0.573$", "$x_2 \leq 0.421$", "$x_3 \leq 0.545$"]
             for line in txt:
                 if "impurity = 0.0" not in line:
                     if ("<=" in line) or (">" in line):

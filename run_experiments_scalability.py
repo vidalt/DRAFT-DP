@@ -61,8 +61,8 @@ if verbose:
 
 # Solver parameters
 verbosity = int(verbose)
-n_threads = 16
-time_out = 18000
+n_threads = 48
+time_out = 36000
 
 
 data = pd.read_csv(path)
@@ -111,6 +111,18 @@ try:
 
     if dict_res['status'] == 'OPTIMAL' or dict_res['status'] == 'FEASIBLE':
         e_mean, list_matching = average_error(dict_res['reconstructed_data'],X_train.to_numpy(), seed)
+
+        '''anytime_errors = []
+        for a_sol in dict_res['anytime_sols']:
+            e_mean_a_sol, _ = average_error(a_sol,X_train, seed)
+            anytime_errors.append(e_mean_a_sol)'''
+        from concurrent.futures import ThreadPoolExecutor
+
+        with ThreadPoolExecutor(max_workers=n_threads) as executor:
+            results = executor.map(lambda a_sol: average_error(a_sol, X_train, seed), dict_res['anytime_sols'])
+
+        anytime_errors = [e_mean for e_mean, _ in results]
+
         success = clf_unnoise.format_nb() == dict_res['nb_recons']
         if verbose:
             print("Complete solving duration :", dict_res['duration'])
@@ -143,6 +155,8 @@ try:
         "seed": seed,
         "depth": depth,
         "id": expe_id,
+        'anytime_errors' : anytime_errors,
+        'anytime_sols_times' : dict_res['anytime_sols_times']                           
     }
 except:
     if verbosity:
@@ -168,7 +182,7 @@ except:
         "id": expe_id,
     }
 
-res_path = "experiments_results/results_scalability/scalability_exps"
+res_path = "experiments_results/Results_scalability/scalability_exps"
 
 results_file = f'{res_path}_{dataset}_results.json'
 

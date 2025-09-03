@@ -1,0 +1,23 @@
+[
+    {
+        "N_samples": 25,
+        "N_trees": 10,
+        "epsilon": 5,
+        "epsilon_etape": 0.5,
+        "obj_active": 1,
+        "reconstruction_error": 0.1942857142857143,
+        "time_to_first_solution": 21.95671033859253,
+        "duration": 36014.65412569046,
+        "solver_status": "FEASIBLE",
+        "N_reconstruit": 25,
+        "accuracy_train": 0.92,
+        "accuracy_test": 0.7742732218550783,
+        "dataset": "data/default_credit.csv",
+        "time_out": 36000,
+        "check_ohe": true,
+        "succes_total_debruitage": false,
+        "seed": 2,
+        "depth": 5,
+        "id": 97
+    }
+]

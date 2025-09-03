@@ -1,0 +1,23 @@
+[
+    {
+        "N_samples": 25,
+        "N_trees": 10,
+        "epsilon": 5,
+        "epsilon_etape": 0.5,
+        "obj_active": 1,
+        "reconstruction_error": 0.07428571428571427,
+        "time_to_first_solution": 21.25428581237793,
+        "duration": 36014.00939774513,
+        "solver_status": "FEASIBLE",
+        "N_reconstruit": 25,
+        "accuracy_train": 0.76,
+        "accuracy_test": 0.5609246623033004,
+        "dataset": "data/compas.csv",
+        "time_out": 36000,
+        "check_ohe": true,
+        "succes_total_debruitage": false,
+        "seed": 2,
+        "depth": 5,
+        "id": 92
+    }
+]

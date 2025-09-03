@@ -205,7 +205,7 @@ else:
         "id": expe_id,
     }
 
-res_path = "experiments_results/results_partial_reconstruction/partial_reconstr_exps"
+res_path = "experiments_results/Results_partial_reconstruction/partial_reconstr_exps"
 
 results_file = f'{res_path}_{dataset}_results.json'
 

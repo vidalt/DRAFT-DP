@@ -81,14 +81,14 @@ def average_error(x_sol, x_train, seed, return_all_distances=False):
     # Case 2: x_train has more elements than x_sol
     elif x_train_array.shape[0] > x_sol_array.shape[0]:
         random.seed(seed)
-        selected_indices = random.sample(range(x_train_array.shape[0]), x_sol_array.shape[0]) 
-        x_train_array = x_train_array[selected_indices]
+        additional_indices = random.choices(range(x_sol_array.shape[0]), k=x_train_array.shape[0] - x_sol_array.shape[0])
+        x_sol_array = np.concatenate((x_sol_array, x_sol_array[additional_indices]), axis=0) # randomly oversample x_sol to match x_train
 
     # Case 3: x_train has fewer elements than x_sol
     else:
         random.seed(seed)
-        additional_indices = random.choices(range(x_train_array.shape[0]), k=x_sol_array.shape[0] - x_train_array.shape[0])
-        x_train_array = np.concatenate((x_train_array, x_train_array[additional_indices]), axis=0)
+        selected_indices = random.sample(range(x_sol_array.shape[0]), x_train_array.shape[0]) 
+        x_sol_array = x_sol_array[selected_indices] # randomly subsample x_sol to match x_train
 
     # Now both arrays have the same size, proceed with computing the error
     cost = matrice_matching(x_sol_array, x_train_array)
