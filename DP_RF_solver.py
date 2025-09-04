@@ -151,7 +151,7 @@ class DP_RF_solver:
         
         if N_fixed is None:
             N_avg, N_min, N_max = self.interval_N() #self.clf, self.eps_v, N_trees
-            N_min = max([0, N_min]) # can't be negative
+            N_min = max([1, N_min]) # can't be negative
             if verbosity:
                 print('N_avg', N_avg,'N_max :', N_max, "N_min :", N_min)
 
