@@ -151,14 +151,15 @@ class DP_RF_solver:
         
         if N_fixed is None:
             N_avg, N_min, N_max = self.interval_N() #self.clf, self.eps_v, N_trees
+            N_min = max([0, N_min]) # can't be negative
             if verbosity:
                 print('N_avg', N_avg,'N_max :', N_max, "N_min :", N_min)
-            
+
             # Variables definitions
             N = model.NewIntVar(N_min, N_max, "N")
             nb = [[[model.NewIntVar(0, N_max, 'nb_%d_%d_%d' % (t, v, c)) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] 
             delta = [[[model.NewIntVar(-bound, bound, 'delta_%d_%d_%d' % (t, v, c)) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] 
-            
+
             liste_p = []
             liste_bool = []
             

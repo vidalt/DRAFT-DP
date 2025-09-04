@@ -9,7 +9,7 @@ import json
 import copy
 from sklearn.metrics import accuracy_score
 
-verbose = False 
+verbose = True 
 
 parser = argparse.ArgumentParser(description='Dataset reconstruction from random forest')
 parser.add_argument('--expe_id', type=int, default=0)
@@ -54,6 +54,7 @@ if verbose:
     print("N_trees :", N_trees)
     print("epsilon :", epsilon)
     print("N_samples :", N_samples)
+    print("Max Depth = ", depth)
     print("obj_active :", obj_active)
     print("dataset :", path)
     print("seed :", seed)
@@ -79,6 +80,9 @@ clf.fit(X_train,y_train)
 clf_unnoise = copy.deepcopy(clf)
 
 clf.add_noise(epsilon)
+
+#print(clf_unnoise.format_nb(), "(%d feuilles)" %(len(clf_unnoise.format_nb()[0])))
+#print(clf.format_nb(), "(%d feuilles)" %(len(clf.format_nb()[0])))
 
 # Solve the reconstruction problem
 solver = DP_RF_solver(clf,epsilon)
