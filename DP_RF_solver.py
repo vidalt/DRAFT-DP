@@ -42,8 +42,8 @@ class DP_RF_solver:
         N_leaves = 2 ** self.clf.estimators_[0].tree_.max_depth
         N_classes = self.clf.n_classes_
         std = np.sqrt(2.0 * N_leaves * N_classes) / self.eps_v
-        bound_inf = int(N_avg - t[self.clf.N_trees - 2] * std)
-        bound_sup = int(N_avg + t[self.clf.N_trees - 2] * std)
+        bound_inf = int(N_avg - max([t[self.clf.N_trees - 2], 1]) * std)
+        bound_sup = int(N_avg + max([t[self.clf.N_trees - 2], 1]) * std)
         return N_avg, bound_inf, bound_sup
     
     def log_liste_laplace(self):
