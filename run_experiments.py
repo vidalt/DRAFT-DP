@@ -35,6 +35,16 @@ for obj_active_bool in list_obj_active:
                         for seed in list_seed:
                             list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset])
 
+# to undo later 
+for obj_active_bool in list_obj_active:
+    for depth in list_depth:
+        for Ntrees in [1]:
+            for epsi in list_epsilon: 
+                for Nsamp in list_N_samples:
+                    for dataset in list_datasets:
+                        for seed in list_seed:
+                            list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset])
+
 N_trees = list_config[expe_id][0]
 epsilon = list_config[expe_id][1]
 N_samples = list_config[expe_id][2]
