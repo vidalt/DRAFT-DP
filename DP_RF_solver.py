@@ -41,7 +41,7 @@ class DP_RF_solver:
         t = [6.314, 2.920, 2.353, 2.132, 2.015, 1.943, 1.895, 1.860, 1.833, 1.812, 1.796, 1.782, 1.771, 1.761, 1.753, 1.746, 1.740, 1.734, 1.729, 1.725, 1.721, 1.717, 1.714, 1.711, 1.708, 1.706, 1.703, 1.701, 1.699, 1.697]
         N_leaves = 2 ** self.clf.estimators_[0].tree_.max_depth
         N_classes = self.clf.n_classes_
-        std = np.sqrt(2.0 * N_leaves * N_classes) / self.eps
+        std = np.sqrt(2.0 * N_leaves * N_classes) / self.eps_v
         bound_inf = int(N_avg - t[self.clf.N_trees - 2] * std)
         bound_sup = int(N_avg + t[self.clf.N_trees - 2] * std)
         return N_avg, bound_inf, bound_sup
