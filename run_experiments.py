@@ -98,17 +98,6 @@ clf.add_noise(epsilon)
 solver = DP_RF_solver(clf,epsilon)
 dict_res = solver.fit(N_fixed, seed, time_out, n_threads, verbosity, obj_active)
 
-# Retrieve solving time and reconstructed data
-duration = dict_res['duration']
-x_sol = dict_res['reconstructed_data']
-
-# Evaluate and display the reconstruction rate
-e_mean, list_matching = average_error(x_sol,X_train.to_numpy(),seed)
-
-if verbose:
-    print("Complete solving duration :", duration)
-    print("Reconstruction Error: ", e_mean)
-
 # Evaluate actual reconstruction
 N_reconstruit = 0
 N_min = 0
@@ -123,8 +112,16 @@ accuracy_test = accuracy_score(y_test, clf.predict(X_test))
 accuracy_train = accuracy_score(y_train, clf.predict(X_train))
 
 if dict_res['status'] == 'OPTIMAL' or dict_res['status'] == 'FEASIBLE':
+    # Retrieve solving time and reconstructed data
+    duration = dict_res['duration']
+    
+    # Compute reconstruction error
     e_mean, list_matching, all_distances = average_error(dict_res['reconstructed_data'],X_train, seed, return_all_distances=True)
 
+    if verbose:
+        print("Complete solving duration :", duration)
+        print("Reconstruction Error: ", e_mean)
+    
     if N_fixed is not None:
         # New
         anytime_errors = []
