@@ -73,7 +73,7 @@ if verbose:
 # Solver parameters
 verbosity = int(verbose)
 n_threads = 16
-time_out = 7200
+time_out = 10800 # 3 hours
 
 data = pd.read_csv(path)
 X = data.drop(columns=[prediction])
