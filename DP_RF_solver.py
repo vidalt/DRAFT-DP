@@ -152,6 +152,9 @@ class DP_RF_solver:
         if N_fixed is None:
             N_avg, N_min, N_max = self.interval_N() #self.clf, self.eps_v, N_trees
             N_min = max([1, N_min]) # can't be negative
+            if N_avg < 300: # arbitrary upper bound to avoid too large models that can't be solved anyway
+                N_max = min([N_max, 400]) # arbitrary upper bound to avoid too large models that can't be solved anyway
+                # otherwise, don't limit N_max but the protobuf size limit might be close
             if verbosity:
                 print('N_avg', N_avg,'N_max :', N_max, "N_min :", N_min)
 
