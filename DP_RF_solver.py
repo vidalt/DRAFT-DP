@@ -127,7 +127,7 @@ class DP_RF_solver:
             print("Parsing done")
         return trees_branches
     
-    def fit(self, N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_known = None, known_attributes=[]):
+    def fit(self, N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_known = None, known_attributes=[], N_max_upper_bound=400):
         start = time.time()
         
         model = cp_model.CpModel()
@@ -152,26 +152,26 @@ class DP_RF_solver:
         if N_fixed is None:
             N_avg, N_min, N_max = self.interval_N() #self.clf, self.eps_v, N_trees
             N_min = max([1, N_min]) # can't be negative
-            if N_avg < 300: # arbitrary upper bound to avoid too large models that can't be solved anyway
-                N_max = min([N_max, 400]) # arbitrary upper bound to avoid too large models that can't be solved anyway
-                # otherwise, don't limit N_max but the protobuf size limit might be close
+            N_max = min([N_max, N_max_upper_bound]) # arbitrary upper bound to avoid too large models that can't be solved anyway
+            if N_avg > N_max_upper_bound: 
+                print("Warning: N_avg is quite large (%d) compared to N_max_upper_bound (%d). Consider increasing N_max_upper_bound if no solution is found." % (N_avg, N_max_upper_bound))
             if verbosity:
                 print('N_avg', N_avg,'N_max :', N_max, "N_min :", N_min)
 
             # Variables definitions
             N = model.NewIntVar(N_min, N_max, "N")
-            nb = [[[model.NewIntVar(0, N_max, 'nb_%d_%d_%d' % (t, v, c)) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] 
-            delta = [[[model.NewIntVar(-bound, bound, 'delta_%d_%d_%d' % (t, v, c)) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] 
+            nb = [[[model.NewIntVar(0, N_max, 'nb_%d' %t) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] #Name: %d_%d_%d' % (t, v, c)
+            delta = [[[model.NewIntVar(-bound, bound, 'delta_%d' %t) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] #Name: _%d_%d' % (t, v, c)
 
             liste_p = []
             liste_bool = []
             
             x = [[model.NewBoolVar('x_%d_%d' % (k,j)) for j in range(M)] for k in range(N_max)]
-            y = [[[[model.NewBoolVar('y_%d_%d_%d_%d' % (t,v,k,c)) for c in range(card_c)] for k in range(N_max)] for v in range(N_leaves)] for t in range(N_trees)]
+            y = [[[[model.NewBoolVar('y') for c in range(card_c)] for k in range(N_max)] for v in range(N_leaves)] for t in range(N_trees)] #Name: _%d_%d_%d_%d' % (t,v,k,c)
             z = [[model.NewBoolVar('Z_%d_%d' % (i, c)) for c in range(card_c)] for i in range(N_max)]
             
-            delta_bool_list = [[[[model.NewBoolVar(f'delta_val_{i}_{t}_{v}_{c}') for i in range(0, bound+1)] for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)]
-            abs_delta = [[[model.NewIntVar(0, bound, 'delta_%d_%d_%d' % (t, v, c)) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] 
+            delta_bool_list = [[[[model.NewBoolVar('delta_val') for i in range(0, bound+1)] for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] #Name: _{i}_{t}_{v}_{c}
+            abs_delta = [[[model.NewIntVar(0, bound, 'delta') for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] #Name: _%d_%d_%d' % (t, v, c)
             
             for t in range(N_trees):
                 #Constraint ensuring that all trees have N training examples
@@ -210,7 +210,7 @@ class DP_RF_solver:
 
                     
             #The values of the features align with the splits of the branch
-            ex_k_not_classified_by_leaf_v_in_tree_t = [[[model.NewBoolVar(f'ex_k_not_classified_by_leaf_v_in_tree_t{t}_{v}_{k}_{c}') for k in range(N_max)] for v in range(N_leaves)] for t in range(N_trees)]
+            ex_k_not_classified_by_leaf_v_in_tree_t = [[[model.NewBoolVar('ex_k_not_classified_by_leaf_v_in_tree_t') for k in range(N_max)] for v in range(N_leaves)] for t in range(N_trees)] #Name: {t}_{v}_{k}_{c}
             for idx_tree, liste_branches in enumerate(trees_branches):
                 #Reverse the direction of liste_branches due to the diffprivlib numbering being reversed
                 liste_branches = liste_branches[::-1]   
