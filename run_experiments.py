@@ -17,7 +17,7 @@ args = parser.parse_args()
 expe_id=args.expe_id
 
 list_N_samples = [100]
-list_N_trees = [5,10,20,30] #[1,5,10,20,30]
+list_N_trees = [1,5,10,20,30]
 list_epsilon = [30,20,10,5,1,0.1]
 list_obj_active = [1]
 list_depth = [3,5,7]
@@ -35,20 +35,10 @@ for obj_active_bool in list_obj_active:
                         for seed in list_seed:
                             list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset])
 
-# to undo later 
-for obj_active_bool in list_obj_active:
-    for depth in list_depth:
-        for Ntrees in [1]:
-            for epsi in list_epsilon: 
-                for Nsamp in list_N_samples:
-                    for dataset in list_datasets:
-                        for seed in list_seed:
-                            list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset])
-
 N_trees = list_config[expe_id][0]
 epsilon = list_config[expe_id][1]
 N_samples = list_config[expe_id][2]
-N_fixed = None #If N is known, set N_fixed = N_samples, else set N_fixed = None
+N_fixed = N_samples #If N is known, set N_fixed = N_samples, else set N_fixed = None
 obj_active = list_config[expe_id][3]
 path = list_config[expe_id][4]
 seed = list_config[expe_id][5]

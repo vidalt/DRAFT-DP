@@ -61,7 +61,7 @@ if verbose:
 
 # Solver parameters
 verbosity = int(verbose)
-n_threads = 48
+n_threads = 32
 time_out = 36000
 
 

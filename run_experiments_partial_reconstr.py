@@ -16,7 +16,7 @@ parser.add_argument('--expe_id', type=int, default=0)
 args = parser.parse_args()
 expe_id=args.expe_id
 
-list_N_samples = [10]
+list_N_samples = [100]
 list_N_trees = [10]
 list_epsilon = [5]
 list_obj_active = [1]
