@@ -127,7 +127,11 @@ class DP_RF_solver:
             print("Parsing done")
         return trees_branches
     
-    def fit(self, N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_known = None, known_attributes=[], N_max_upper_bound=400):
+    def fit(self, N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_known = None, known_attributes=[], N_max_upper_bound=400,
+            X_partial_expe=None, y_partial_expe=None, ex_id=None):
+        # => X_known and known_attributes are used only for the partial reconstruction experiments
+        # => X_partial_expe and y_partial_expe are used only for informed adversary experiments, in which case ex_id is the index of the example to reconstruct in X_partial_expe
+        
         start = time.time()
         
         model = cp_model.CpModel()
@@ -265,7 +269,7 @@ class DP_RF_solver:
             y = [[[[model.NewBoolVar('y_%d_%d_%d_%d' % (t,v,k,c)) for c in range(card_c)] for k in range(N)] for v in range(N_leaves)] for t in range(N_trees)]
             z = [[model.NewBoolVar('Z_%d_%d' % (i, c)) for c in range(card_c)] for i in range(N)]
             
-            # Assume knowledge of dataset
+            # Assume knowledge of part of the dataset's attributes
             if not(X_known is None):
                 assert(X_known.shape[1] >= len(known_attributes))
                 assert(X_known.shape[1] == M) # not mandatory actually but that's what I do in the experiments
@@ -276,6 +280,23 @@ class DP_RF_solver:
                         model.Add( x[k][i] == X_known[k][i] )
             # ----------------------------------------------------------------------------------------------
 
+            # Assume knowledge of part of the dataset's examples (informed adversary experiment)
+            if not(X_partial_expe is None) and not(y_partial_expe is None) and not(ex_id is None):
+                assert(X_partial_expe.shape[1] == M)
+                assert(X_partial_expe.shape[0] == N)
+                assert(y_partial_expe.shape[0] == N)
+                assert(0 <= ex_id and ex_id <= N)
+
+                for k in range(N): # fix all examples but one
+                    if k != ex_id: # ex_id
+                        for j in range(M): 
+                            model.Add( x[k][j] == X_partial_expe[k][j] )
+                        for c in range(card_c):
+                            if y_partial_expe[k] == c:
+                                model.Add(z[k][c] == 1)
+                            else:
+                                model.Add(z[k][c] == 0)
+            # ----------------------------------------------------------------------------------------------
 
             delta_bool_list = [[[[model.NewBoolVar(f'delta_val_{i}_{t}_{v}_{c}') for i in range(0, bound+1)] for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)]
             abs_delta = [[[model.NewIntVar(0, bound, 'delta_%d_%d_%d' % (t, v, c)) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] 
@@ -379,7 +400,7 @@ class DP_RF_solver:
             solver.Solve(model)
         else:
             # Create the callback used to log time to first solution
-            solcallback = MySolutionCallback(x, M)
+            solcallback = MySolutionCallback(x, M, N)
 
             # Solving the problem
             #solver.Solve(model)
