@@ -86,7 +86,7 @@ clf.add_noise(epsilon)
 
 # Solve the reconstruction problem
 solver = DP_RF_solver(clf,epsilon)
-dict_res = solver.fit(N_fixed, seed, time_out, n_threads, verbosity, obj_active)
+dict_res_ = solver.fit(N_fixed, seed, time_out, n_threads, verbosity, obj_active)
 
 # Evaluate actual reconstruction
 N_reconstruit = 0
@@ -101,12 +101,12 @@ X_test = X_test.to_numpy()
 accuracy_test = accuracy_score(y_test, clf.predict(X_test))
 accuracy_train = accuracy_score(y_train, clf.predict(X_train))
 
-if dict_res['status'] == 'OPTIMAL' or dict_res['status'] == 'FEASIBLE':
+if dict_res_['status'] == 'OPTIMAL' or dict_res_['status'] == 'FEASIBLE':
     # Retrieve solving time and reconstructed data
-    duration = dict_res['duration']
+    duration = dict_res_['duration']
     
     # Compute reconstruction error
-    e_mean, list_matching, all_distances = average_error(dict_res['reconstructed_data'],X_train, seed, return_all_distances=True)
+    e_mean, list_matching, all_distances = average_error(dict_res_['reconstructed_data'],X_train, seed, return_all_distances=True)
 
     if verbose:
         print("Complete solving duration :", duration)
@@ -115,7 +115,7 @@ if dict_res['status'] == 'OPTIMAL' or dict_res['status'] == 'FEASIBLE':
     if N_fixed is not None:
         # New
         anytime_errors = []
-        for a_sol in dict_res['anytime_sols']:
+        for a_sol in dict_res_['anytime_sols']:
             e_mean_a_sol, _ = average_error(a_sol,X_train, seed)
             anytime_errors.append(e_mean_a_sol)
 
@@ -125,13 +125,13 @@ if dict_res['status'] == 'OPTIMAL' or dict_res['status'] == 'FEASIBLE':
         clf.fit(X_train)
         all_distances_outlier_scores = clf.decision_function([X_train[i] for i in list_matching]) # Average anomaly score of X of the base classifiers.
 
-    success = clf_unnoise.format_nb() == dict_res['nb_recons']
+    success = clf_unnoise.format_nb() == dict_res_['nb_recons']
     if verbose:
-        print("Complete solving duration :", dict_res['duration'])
+        print("Complete solving duration :", dict_res_['duration'])
         print("Reconstruction Error: ", e_mean)
-    N_min = dict_res['N_min']
-    N_max = dict_res['N_max']
-    N_reconstruit = dict_res['N']
+    N_min = dict_res_['N_min']
+    N_max = dict_res_['N_max']
+    N_reconstruit = dict_res_['N']
 
     # Additional metrics:
     # (i) Distribution-aware baseline
@@ -147,7 +147,7 @@ if dict_res['status'] == 'OPTIMAL' or dict_res['status'] == 'FEASIBLE':
             sampled_from_distrib = X_test[sampled_indices]
 
             baseline_distrib, _ = average_error(sampled_from_distrib,X_train, seed) # compute error between X_train and another dataset from the same distrib
-            e_distrib, _ = average_error(dict_res['reconstructed_data'],sampled_from_distrib, seed) # compute error between reconstructed data and another dataset from the same distrib
+            e_distrib, _ = average_error(dict_res_['reconstructed_data'],sampled_from_distrib, seed) # compute error between reconstructed data and another dataset from the same distrib
 
             e_baseline_distrib += baseline_distrib
             e_mean_distrib += e_distrib
@@ -165,8 +165,8 @@ if dict_res['status'] == 'OPTIMAL' or dict_res['status'] == 'FEASIBLE':
         "reconstruction_error": e_mean,
         "all_distances":all_distances,
         "all_distances_x_train_ids":list_matching,
-        "duration": dict_res['duration'],
-        "solver_status": dict_res['status'],
+        "duration": dict_res_['duration'],
+        "solver_status": dict_res_['status'],
         "N_reconstruit": N_reconstruit,
         "accuracy_train": accuracy_train,
         "accuracy_test": accuracy_test,
@@ -180,9 +180,9 @@ if dict_res['status'] == 'OPTIMAL' or dict_res['status'] == 'FEASIBLE':
     }
 
     if N_fixed is not None:
-        dict_res['anytime_sols_times'] =  dict_res['anytime_sols_times'] 
-        dict_res['anytime_errors'] =  dict_res['anytime_errors'] 
-        dict_res['time_to_first_solution'] =  dict_res['time_to_first_solution']
+        dict_res['anytime_sols_times'] =  dict_res_['anytime_sols_times'] 
+        dict_res['anytime_errors'] =  anytime_errors 
+        dict_res['time_to_first_solution'] =  dict_res_['time_to_first_solution']
         dict_res['reconstruction_error_matching_distrib_list'] =  list_reconstr_errors_random_datasets
         dict_res['reconstruction_baseline_distrib'] =  e_baseline_distrib # the reconstruction value for a baseline knowing the distrib (matching other datasets from the same distrib.)
         dict_res['reconstruction_error_matching_distrib'] =  e_mean_distrib # the reconstruction value when matching with other datasets from the same distrib
@@ -201,8 +201,8 @@ else:
         "reconstruction_error_matching_distrib": "NA", # the reconstruction value when matching with other datasets from the same distrib
         "reconstruction_baseline_distrib": "NA", # the reconstruction value for a baseline knowing the distrib (matching other datasets from the same distrib.)
         "time_to_first_solution": "NA",
-        "duration": dict_res['duration'],
-        "solver_status": dict_res['status'],
+        "duration": dict_res_['duration'],
+        "solver_status": dict_res_['status'],
         "N_reconstruit": "NA",
         "accuracy_train": accuracy_train,
         "accuracy_test": accuracy_test,
@@ -218,7 +218,7 @@ else:
 res_path = "N_fixed" if N_fixed is not None else "N_free"
 res_path += "%d_%.2f_%d_%d" %(N_trees, epsilon, seed, depth)
 if N_fixed is not None:
-    results_file = f'experiments_results/Results_main_paper/{res_path}_{dataset}_results.json'
+    results_file = f'experiments_results/Results_main_paper/{res_path}_{dataset}_resultstt.json'
 else:
     results_file = f'experiments_results/Results_main_paper_N_unknown/{res_path}_{dataset}_results.json'
 
