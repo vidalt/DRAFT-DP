@@ -17,12 +17,12 @@ args = parser.parse_args()
 expe_id=args.expe_id
 
 list_N_samples = [100]
-list_N_trees = [1,5,10,20,30]
-list_epsilon = [30,20,10,5,1,0.1]
+list_N_trees = [10]
+list_epsilon = [1000]
 list_obj_active = [1]
-list_depth = [3,5,7]
+list_depth = [5]
 list_seed = [0,1,2,3,4]
-list_datasets = ['compas','default_credit', 'adult']
+list_datasets = ['compas' ,'default_credit', 'adult']
 
 list_config = []
 
