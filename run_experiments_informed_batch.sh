@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --array=0-89
-#SBATCH --time=04:30:00
+#SBATCH --array=0-14
+#SBATCH --time=02:30:00
 #SBATCH --cpus-per-task=16
 #SBATCH --mem=112G  
 #SBATCH -o experiments_results/output_%A_%a.out

@@ -18,7 +18,7 @@ expe_id=args.expe_id
 
 list_N_samples = [100]
 list_N_trees = [10]
-list_epsilon = [30,20,10,5,1,0.1]
+list_epsilon = [1000]
 list_obj_active = [1]
 list_depth = [5]
 list_seed = [0,1,2,3,4]
@@ -99,7 +99,6 @@ nb_failures = 0
 for ex_id in range(N_samples):
     solver = DP_RF_solver(clf, epsilon)
     dict_res_ = solver.fit(N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_partial_expe=X_train, y_partial_expe=y_train, ex_id=ex_id)
-    print(dict_res_)
 
     if dict_res_['status'] == 'OPTIMAL' or dict_res_['status'] == 'FEASIBLE':
         # Retrieve solving time and reconstructed data
