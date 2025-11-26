@@ -11,7 +11,7 @@ from sklearn.metrics import accuracy_score
 import torch 
 import time 
 
-verbose = True 
+verbose = False 
 n_threads = 16
 parser = argparse.ArgumentParser(description='Dataset reconstruction from random forest')
 parser.add_argument('--expe_id', type=int, default=0)
@@ -145,7 +145,9 @@ for ex_id in range(N_samples):
         logits = reconstructor(forest_tensor)      # (1, d)
         probs = torch.sigmoid(logits)[0]   # (d,)
         x_hat_binary = (probs >= 0.5).cpu().numpy().astype(np.float32)
-    print("Reconstructed: ", x_hat_binary)
+    
+    if verbose:
+        print("Reconstructed: ", x_hat_binary)
         
     # Compute reconstruction error
     e_mean_example = dist_individus(x_hat_binary, X_train[ex_id])
