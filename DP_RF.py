@@ -18,6 +18,7 @@ class DP_RF:
         self.clf = DP_RandomForestClassifier(n_estimators=N_trees, max_depth=self.maximum_depth, bounds=(0, 1), classes=[0, 1])
             
     def fit(self, X, y):
+        np.random.seed(self.seed)
         self.clf.fit(X, y)
         self.estimators_ = self.clf.estimators_
         self.n_classes_ = self.clf.n_classes_
