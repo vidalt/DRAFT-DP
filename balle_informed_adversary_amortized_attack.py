@@ -5,35 +5,6 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import pandas as pd 
 
-def compute_forest_serialization_normalization(dp_rf_class, path, dataset, N_samples, N_trees, ohe_groups, depth, seed, verbosity, epsilon, X, y, n_iters=500):
-    forest_samples = []
-    for i in range(n_iters):
-        np.random.seed(seed + i)
-        # subsample training data
-        indices = np.random.choice(len(X), size=N_samples, replace=False)
-        X_train_sample = X[indices]
-        y_train_sample = y[indices]
-        clf = dp_rf_class(path, dataset, N_samples, N_trees, ohe_groups, depth, seed, verbosity)
-        clf.fit(pd.DataFrame(X_train_sample), y_train_sample)
-        clf.add_noise(epsilon)
-        forest_vec = serialize_forest_leaf_counts_minus_known_fixed(
-            clf,
-            X_train_sample[:-1],
-            y_train_sample[:-1],
-            n_classes=2,
-            max_leaves=2 ** depth,
-        )  # forest_vec: shape (D_forest,)
-
-        forest_samples.append(forest_vec)
-
-    forest_mat = np.stack(forest_samples, axis=0)
-
-    # Per-feature stats: shape (D_forest,)
-    mean = forest_mat.mean(axis=0)
-    std = forest_mat.std(axis=0)
-    
-    return mean.astype(np.float32), std.astype(np.float32)
-
 def serialize_dp_forest_minus_known(
     rf,
     X_known,
@@ -251,6 +222,7 @@ def serialize_forest_leaf_counts_minus_known_fixed(
         tree = est.tree_
 
         raw_val = tree.value
+
         if raw_val.ndim == 3:
             raw_val = raw_val[:, 0, :]
         raw_val = raw_val.astype(np.float32)
@@ -404,6 +376,7 @@ class DPRFReconstructionDataset(Dataset):
             ohe_groups=self.ohe_groups if hasattr(self.dp_rf_class, "one_hot_groups") else self.ohe_groups,
             depth=self.max_depth,
             seed=seed,
+            seed_noise=data_sampling_seed,
         )
 
         dp_rf.fit(pd.DataFrame(X_training), y_training)

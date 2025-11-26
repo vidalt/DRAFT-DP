@@ -4,13 +4,14 @@ from diffprivlib.models import RandomForestClassifier as DP_RandomForestClassifi
 from datasets_infos import predictions
 
 class DP_RF:
-    def __init__(self, path, dataset, N_samples, N_trees, ohe_groups, depth, seed, verbosity=0):
+    def __init__(self, path, dataset, N_samples, N_trees, ohe_groups, depth, seed, verbosity=0, seed_noise=0):
         self.path = path
         self.N_samples = N_samples
         self.N_trees = N_trees
         self.ohe_groups = ohe_groups
         self.depth = depth
         self.seed = seed
+        self.seed_noise = seed_noise
         self.verbosity = verbosity
         
         self.maximum_depth = depth
@@ -51,7 +52,7 @@ class DP_RF:
         eps_v = eps / self.N_trees
         N_leaves = 2 ** self.clf.estimators_[0].tree_.max_depth
         card_c = self.clf.n_classes_
-        np.random.seed(self.seed)
+        np.random.seed(self.seed_noise)
         delta = [np.random.laplace(scale=1.0 / eps_v) for _ in range(self.N_trees * N_leaves * card_c)]
         for tree in self.clf.estimators_:
             for i in range(len(tree.tree_.value)):

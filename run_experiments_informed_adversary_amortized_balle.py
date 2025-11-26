@@ -11,8 +11,8 @@ from sklearn.metrics import accuracy_score
 import torch 
 import time 
 
-verbose = False 
-n_threads = 16
+verbose = True 
+n_threads = 8
 parser = argparse.ArgumentParser(description='Dataset reconstruction from random forest')
 parser.add_argument('--expe_id', type=int, default=0)
 args = parser.parse_args()
@@ -38,7 +38,7 @@ for obj_active_bool in list_obj_active:
                             list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset])
 
 N_trees = list_config[expe_id][0]
-epsilon = list_config[expe_id][1]
+epsilon = 0.1 #list_config[expe_id][1]
 N_samples = list_config[expe_id][2]
 N_fixed = N_samples #If N is known, set N_fixed = N_samples, else set N_fixed = None
 obj_active = list_config[expe_id][3]
@@ -72,7 +72,7 @@ sample_size = len(X)
 X_train, X_test, y_train, y_test = data_splitting(data, prediction, sample_size - N_samples, seed)
 
 # Creation of a DP RF
-clf = DP_RF(path, dataset, N_samples, N_trees, ohe_groups, depth, seed, verbosity)
+clf = DP_RF(path, dataset, N_samples, N_trees, ohe_groups, depth, seed, verbosity, seed_noise=seed)
 clf.fit(X_train,y_train)
 
 # Store the unnnoised RF
@@ -174,7 +174,6 @@ dict_res = {
     "dataset": path,
     "seed": seed,
     "depth": depth,
-    "reconstructed_samples": reconstructed_samples,
     "id": expe_id                     
 }
 
