@@ -11,8 +11,8 @@ from sklearn.metrics import accuracy_score
 import torch 
 import time 
 
-verbose = True 
-n_threads = 8
+verbose = False 
+n_threads = 16
 parser = argparse.ArgumentParser(description='Dataset reconstruction from random forest')
 parser.add_argument('--expe_id', type=int, default=0)
 args = parser.parse_args()
@@ -38,7 +38,7 @@ for obj_active_bool in list_obj_active:
                             list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset])
 
 N_trees = list_config[expe_id][0]
-epsilon = 0.1 #list_config[expe_id][1]
+epsilon = list_config[expe_id][1]
 N_samples = list_config[expe_id][2]
 N_fixed = N_samples #If N is known, set N_fixed = N_samples, else set N_fixed = None
 obj_active = list_config[expe_id][3]
