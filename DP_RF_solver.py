@@ -128,7 +128,7 @@ class DP_RF_solver:
         return trees_branches
     
     def fit(self, N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_known = None, known_attributes=[], N_max_upper_bound=400,
-            X_partial_expe=None, y_partial_expe=None, ex_id=None):
+            X_partial_expe=None, y_partial_expe=None, ex_id=None, target_ratio=None):
         # => X_known and known_attributes are used only for the partial reconstruction experiments
         # => X_partial_expe and y_partial_expe are used only for informed adversary experiments, in which case ex_id is the index of the example to reconstruct in X_partial_expe
         
@@ -394,6 +394,56 @@ class DP_RF_solver:
         solver.parameters.random_seed = seed
 
         if obj_active:
+            if not(X_partial_expe is None) and not(y_partial_expe is None) and not(ex_id is None):
+                # For informed adversary experiment
+                # Add a regularization term encouraging proximity of the reconstructed example to the others
+                list_l1_bools = []
+                list_l1_coeffs = []
+                for k in range(N):
+                    if k != ex_id: # ex_id
+                        for j in range(M): 
+                            if X_partial_expe[k][j] == 1: 
+                                list_l1_bools.append(x[ex_id][j])
+                            elif X_partial_expe[k][j] == 0:
+                                list_l1_bools.append(x[ex_id][j].Not())
+                            else:
+                                raise ValueError("X_partial_expe should be binary.")
+                            list_l1_coeffs.append(1)
+
+                n_leaves_total = len(liste_bool)/len(p)
+                likelihood_obj_range = np.abs(max(liste_p)*n_leaves_total -min(liste_p)*n_leaves_total)
+                proximity_obj_range = sum(list_l1_coeffs)
+                if target_ratio is None:
+                    target_ratio = self.eps/2 # default target ratio
+                if verbosity:
+                    print("Likelihood objective value range:", likelihood_obj_range)
+                    print("Proximity objective value range:", proximity_obj_range)
+                    # Ensure the ratio (Likelihood objective value range/ Proximity objective value range) is around epsilon
+                    # => For large epsilons, gives more importance to likelihood, for small epsilons, gives more importance to proximity
+                    print("Current ratio:", likelihood_obj_range / proximity_obj_range, "target ratio:", target_ratio)
+                if (likelihood_obj_range / proximity_obj_range) > target_ratio:
+                    # Need to give more importance to proximity
+                    if verbosity:
+                        print("Scaling proximity objective...")
+                    current_ratio = proximity_obj_range / likelihood_obj_range
+                    scaling_factor = 1/(current_ratio * target_ratio)
+                    current_ratio = likelihood_obj_range / proximity_obj_range 
+                    list_l1_coeffs = [np.round(val * scaling_factor) for val in list_l1_coeffs]
+                else:
+                    # Need to give more importance to likelihood
+                    if verbosity:
+                        print("Scaling likelihood objective...")
+                    current_ratio = likelihood_obj_range / proximity_obj_range
+                    scaling_factor = target_ratio / current_ratio
+                    liste_p = [np.round(val * scaling_factor) for val in liste_p]
+                likelihood_obj_range = np.abs(max(liste_p)*n_leaves_total -min(liste_p)*n_leaves_total)
+                proximity_obj_range = sum(list_l1_coeffs)
+                if verbosity:
+                    print("[SCALED] Likelihood objective value range:", likelihood_obj_range)
+                    print("[SCALED] Proximity objective value range:", proximity_obj_range)
+                    print("Updated ratio:", likelihood_obj_range / proximity_obj_range, "target ratio:", target_ratio)
+                liste_bool.extend(list_l1_bools) # incorporate the proximity term in the objective
+                liste_p.extend(list_l1_coeffs) # incorporate the proximity term in the objective
             model.Maximize(cp_model.LinearExpr.WeightedSum(liste_bool, liste_p))
 
         if N_fixed is None:   

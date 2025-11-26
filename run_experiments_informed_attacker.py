@@ -18,12 +18,12 @@ expe_id=args.expe_id
 
 list_N_samples = [100]
 list_N_trees = [10]
-list_epsilon = [1000]
+list_epsilon = [0.1, 1, 5, 10, 20, 30, 1000]
 list_obj_active = [1]
 list_depth = [5]
 list_seed = [0,1,2,3,4]
 list_datasets = ['compas' ,'default_credit', 'adult']
-
+target_ratio_divisors = [1, 2, 5]
 list_config = []
 
 for obj_active_bool in list_obj_active:
@@ -33,7 +33,8 @@ for obj_active_bool in list_obj_active:
                 for Nsamp in list_N_samples:
                     for dataset in list_datasets:
                         for seed in list_seed:
-                            list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset])
+                            for target_ratio_divisor in target_ratio_divisors:
+                                list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset, target_ratio_divisor])
 
 N_trees = list_config[expe_id][0]
 epsilon = list_config[expe_id][1]
@@ -46,7 +47,9 @@ depth = list_config[expe_id][6]
 dataset = list_config[expe_id][7]
 ohe_groups = datasets_ohe_vectors[dataset]
 prediction = predictions[dataset]
+target_ratio_divisor = list_config[expe_id][8]
 
+target_ratio = epsilon/target_ratio_divisor
 np.random.seed(seed)
 
 if verbose:
@@ -98,7 +101,7 @@ nb_failures = 0
 # Solve the reconstruction problem
 for ex_id in range(N_samples):
     solver = DP_RF_solver(clf, epsilon)
-    dict_res_ = solver.fit(N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_partial_expe=X_train, y_partial_expe=y_train, ex_id=ex_id)
+    dict_res_ = solver.fit(N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_partial_expe=X_train, y_partial_expe=y_train, ex_id=ex_id, target_ratio=target_ratio)
 
     if dict_res_['status'] == 'OPTIMAL' or dict_res_['status'] == 'FEASIBLE':
         # Retrieve solving time and reconstructed data
@@ -110,6 +113,8 @@ for ex_id in range(N_samples):
         if verbose:
             print("Complete solving duration :", duration)
             print("Reconstruction Error (exemple %d): " % ex_id, e_mean_example)
+            print("Reconstructed Example %d: " % ex_id, dict_res_['reconstructed_data'][ex_id])
+            print("True          Example %d: " % ex_id, X_train[ex_id])
         
         per_exemple_errors.append(e_mean_example)
         
@@ -141,11 +146,12 @@ dict_res = {
     "time_out": time_out,
     "seed": seed,
     "depth": depth,
-    "id": expe_id                     
+    "id": expe_id,
+    'target_ratio_divisor': target_ratio_divisor                    
 }
 
 res_path = "N_fixed" if N_fixed is not None else "N_free"
-res_path += "%d_%.2f_%d_%d" %(N_trees, epsilon, seed, depth)
+res_path += "%d_%.2f_%d_%d_%d" %(N_trees, epsilon, seed, depth, target_ratio_divisor)
 if N_fixed is not None:
     results_file = f'experiments_results/Results_informed_adversary/{res_path}_{dataset}_results.json'
 else:
