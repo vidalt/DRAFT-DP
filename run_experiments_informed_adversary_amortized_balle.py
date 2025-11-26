@@ -92,7 +92,7 @@ X_train = X_train.to_numpy()
 X_test = X_test.to_numpy()
 
 per_exemple_errors = []
-
+reconstructed_samples = []
 def project_to_binary(x_continuous, threshold=0.5):
     return (x_continuous >= threshold).astype(np.float32)
 start = time.time()
@@ -156,6 +156,7 @@ for ex_id in range(N_samples):
         print("Reconstruction Error (exemple %d): " % ex_id, e_mean_example)
         
     per_exemple_errors.append(e_mean_example)
+    reconstructed_samples.append(x_hat_binary)
 
 duration = time.time() - start
     
@@ -173,6 +174,7 @@ dict_res = {
     "dataset": path,
     "seed": seed,
     "depth": depth,
+    "reconstructed_samples": reconstructed_samples,
     "id": expe_id                     
 }
 
