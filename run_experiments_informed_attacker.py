@@ -23,7 +23,7 @@ list_obj_active = [1]
 list_depth = [5]
 list_seed = [0,1,2,3,4]
 list_datasets = ['compas' ,'default_credit', 'adult']
-target_ratio_divisors = [0.5] #[1, 2, 5]
+target_ratio_divisors = [0.001] #[1, 2, 5]
 list_config = []
 
 for obj_active_bool in list_obj_active:
@@ -151,7 +151,7 @@ dict_res = {
 }
 
 res_path = "N_fixed" if N_fixed is not None else "N_free"
-res_path += "%d_%.2f_%d_%d_%d" %(N_trees, epsilon, seed, depth, target_ratio_divisor)
+res_path += "%d_%.2f_%d_%d_%.3f" %(N_trees, epsilon, seed, depth, target_ratio_divisor)
 if N_fixed is not None:
     results_file = f'experiments_results/Results_informed_adversary/{res_path}_{dataset}_results.json'
 else:
