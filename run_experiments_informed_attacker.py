@@ -16,7 +16,7 @@ parser.add_argument('--expe_id', type=int, default=0)
 args = parser.parse_args()
 expe_id=args.expe_id
 
-list_N_samples = [100]
+list_N_samples = [500, 1000] #[100]
 list_N_trees = [10]
 list_epsilon = [0.1, 1, 5, 10, 20, 30, 1000]
 list_obj_active = [1]
@@ -151,7 +151,7 @@ dict_res = {
 }
 
 res_path = "N_fixed" if N_fixed is not None else "N_free"
-res_path += "%d_%.2f_%d_%d_%.3f" %(N_trees, epsilon, seed, depth, target_ratio_divisor)
+res_path += "%d_%.2f_%d_%d_%.3f_%d" %(N_trees, epsilon, seed, depth, target_ratio_divisor, N_samples)
 if N_fixed is not None:
     results_file = f'experiments_results/Results_informed_adversary/{res_path}_{dataset}_results.json'
 else:
