@@ -178,7 +178,7 @@ dict_res = {
 }
 
 res_path = "N_fixed" if N_fixed is not None else "N_free"
-res_path += "%d_%.2f_%d_%d" %(N_trees, epsilon, seed, depth)
+res_path += "%d_%.2f_%d_%d_%d" %(N_trees, epsilon, seed, depth, N_samples)
 if N_fixed is not None:
     results_file = f'experiments_results/Results_informed_adversary_balle/{res_path}_{dataset}_results.json'
 else:
