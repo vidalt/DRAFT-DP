@@ -1,5 +1,5 @@
 from DP_RF import DP_RF
-from DP_RF_solver import DP_RF_solver
+from balle_informed_adversary_attack import train_reconstructor, compute_forest_serialization_normalization, serialize_forest_leaf_counts_minus_known_fixed
 import pandas as pd
 from utils import * 
 from datasets_infos import datasets_ohe_vectors, predictions
@@ -8,22 +8,24 @@ import os
 import json
 import copy
 from sklearn.metrics import accuracy_score
+import torch 
+import time 
 
-verbose = False 
+verbose = True 
 
 parser = argparse.ArgumentParser(description='Dataset reconstruction from random forest')
 parser.add_argument('--expe_id', type=int, default=0)
 args = parser.parse_args()
 expe_id=args.expe_id
 
-list_N_samples = [2000, 5000] 
+list_N_samples = [100]
 list_N_trees = [10]
-list_epsilon = [0.1, 1, 5, 10, 20, 30, 1000]
+list_epsilon = [1000,30,20,10,5,1,0.1]
 list_obj_active = [1]
 list_depth = [5]
 list_seed = [0,1,2,3,4]
 list_datasets = ['compas' ,'default_credit', 'adult']
-target_ratio_divisors = [0.01] 
+
 list_config = []
 
 for obj_active_bool in list_obj_active:
@@ -33,8 +35,7 @@ for obj_active_bool in list_obj_active:
                 for Nsamp in list_N_samples:
                     for dataset in list_datasets:
                         for seed in list_seed:
-                            for target_ratio_divisor in target_ratio_divisors:
-                                list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset, target_ratio_divisor])
+                            list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset])
 
 N_trees = list_config[expe_id][0]
 epsilon = list_config[expe_id][1]
@@ -47,9 +48,7 @@ depth = list_config[expe_id][6]
 dataset = list_config[expe_id][7]
 ohe_groups = datasets_ohe_vectors[dataset]
 prediction = predictions[dataset]
-target_ratio_divisor = list_config[expe_id][8]
 
-target_ratio = epsilon/target_ratio_divisor
 np.random.seed(seed)
 
 if verbose:
@@ -64,8 +63,6 @@ if verbose:
 
 # Solver parameters
 verbosity = int(verbose)
-n_threads = 16
-time_out = 3600
 
 data = pd.read_csv(path)
 X = data.drop(columns=[prediction])
@@ -83,10 +80,11 @@ clf_unnoise = copy.deepcopy(clf)
 
 clf.add_noise(epsilon)
 
-#print(clf_unnoise.format_nb(), "(%d feuilles)" %(len(clf_unnoise.format_nb()[0])))
-#print(clf.format_nb(), "(%d feuilles)" %(len(clf.format_nb()[0])))
-
-
+'''from sklearn.tree import plot_tree
+import matplotlib.pyplot as plt
+plot_tree(clf.clf.estimators_[0])
+plt.savefig("figures/balle_tree_plot_origRF.pdf")
+plt.clf()'''
 accuracy_test = accuracy_score(y_test, clf.predict(X_test))
 accuracy_train = accuracy_score(y_train, clf.predict(X_train))
 
@@ -95,45 +93,73 @@ X_test = X_test.to_numpy()
 
 durations = []
 per_exemple_errors = []
-status_list = []
-nb_failures = 0
 
-# If N_samples is small enough, reconstruct all examples
-if N_samples <= 1000:
-    subsampled_examples = list(range(N_samples))
-else:
-    subsampled_examples = np.random.choice(range(N_samples), size=200, replace=False)
+def project_to_binary(x_continuous, threshold=0.5):
+    return (x_continuous >= threshold).astype(np.float32)
 
+mean, std = None, None
+#######################################################
 # Solve the reconstruction problem
-for ex_id in subsampled_examples:
-    solver = DP_RF_solver(clf, epsilon)
-    dict_res_ = solver.fit(N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_partial_expe=X_train, y_partial_expe=y_train, ex_id=ex_id, target_ratio=target_ratio)
+for ex_id in range(N_samples):
+    start = time.time()
+    # TRAIN THE RECONSTRUCTION NETWORK (using data from the same distribution == the very large test set is fine)
+    mask = np.array([i for i in range(N_samples) if i != ex_id])
+    x_star = X_train[ex_id]
 
-    if dict_res_['status'] == 'OPTIMAL' or dict_res_['status'] == 'FEASIBLE':
-        # Retrieve solving time and reconstructed data
-        duration = dict_res_['duration']
-        
-        # Compute reconstruction error
-        e_mean_example = dist_individus(dict_res_['reconstructed_data'][ex_id], X_train[ex_id])
+    reconstructor = train_reconstructor(
+        X_train=X_train[mask],
+        y_train=y_train[mask],
+        X=X_test,
+        y=y_test.to_numpy(),
+        dp_rf_class=DP_RF,
+        dataset_name=dataset,
+        ohe_groups=ohe_groups,
+        n_trees=N_trees,
+        max_depth=depth,
+        eps=epsilon,
+        n_pairs=320,
+        batch_size=32,
+        n_epochs=5,
+        lr=1e-3,
+        device="cpu",
+        mean=mean,  
+        std=std,
+        seed=seed,
+    )
+    ##################################
+    # RUN THE ATTACK ON THE TRAINED DP RF
+    forest_vec = serialize_forest_leaf_counts_minus_known_fixed(
+        clf,
+        X_train[mask],
+        y_train[mask],
+        n_classes=2,
+        max_leaves=2 ** depth,
+        mean=mean,  
+        std=std,
+    ) 
 
-        if verbose:
-            print("Complete solving duration :", duration)
-            print("Reconstruction Error (exemple %d): " % ex_id, e_mean_example)
-            print("Reconstructed Example %d: " % ex_id, dict_res_['reconstructed_data'][ex_id])
-            print("True          Example %d: " % ex_id, X_train[ex_id])
+    forest_tensor = torch.from_numpy(forest_vec.astype(np.float32)).unsqueeze(0)
+    reconstructor.eval()
+    with torch.no_grad():
+        #x_hat = reconstructor(forest_tensor).cpu().numpy()[0]  # reconstructed x*
+        #x_hat_binary = project_to_binary(x_hat)
+        logits = reconstructor(forest_tensor)      # (1, d)
+        probs = torch.sigmoid(logits)[0]   # (d,)
+        x_hat_binary = (probs >= 0.5).cpu().numpy().astype(np.float32)
+    print("Reconstructed: ", x_hat_binary)
+    #dict_res_ = solver.fit(N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_partial_expe=X_train, y_partial_expe=y_train, ex_id=ex_id)
+    duration = time.time() - start
         
-        per_exemple_errors.append(e_mean_example)
+    # Compute reconstruction error
+    e_mean_example = dist_individus(x_hat_binary, X_train[ex_id])
+
+    if verbose:
+        print("Complete solving duration :", duration)
+        print("Reconstruction Error (exemple %d): " % ex_id, e_mean_example)
         
-    else:
-        if verbosity:
-            print("Solver failed to retrieve feasible solution for exemple %d." % ex_id)
-        nb_failures += 1
-        per_exemple_errors.append(-1)
+    per_exemple_errors.append(e_mean_example)
+    durations.append(duration)
     
-    durations.append(dict_res_['duration'])
-    status_list.append(dict_res_['status'])
-    
-
 dict_res = {
     "N_samples": N_samples,
     "N_trees": N_trees,
@@ -142,24 +168,20 @@ dict_res = {
     "obj_active": obj_active,
     "example_reconstruction_error_avg": np.mean(per_exemple_errors),
     "example_reconstruction_error_list":per_exemple_errors,
-    "nb_failures": nb_failures,
     "duration_avg": np.mean(durations),
     "duration_list": durations,
-    "status_list": status_list,
     "accuracy_train": accuracy_train,
     "accuracy_test": accuracy_test,
     "dataset": path,
-    "time_out": time_out,
     "seed": seed,
     "depth": depth,
-    "id": expe_id,
-    'target_ratio_divisor': target_ratio_divisor                    
+    "id": expe_id                     
 }
 
 res_path = "N_fixed" if N_fixed is not None else "N_free"
-res_path += "%d_%.2f_%d_%d_%.3f_%d" %(N_trees, epsilon, seed, depth, target_ratio_divisor, N_samples)
+res_path += "%d_%.2f_%d_%d" %(N_trees, epsilon, seed, depth)
 if N_fixed is not None:
-    results_file = f'experiments_results/Results_informed_adversary/{res_path}_{dataset}_results.json'
+    results_file = f'experiments_results/Results_informed_adversary_balle/{res_path}_{dataset}_results.json'
 else:
     results_file = f'experiments_results/Results_main_paper_N_unknown/{res_path}_{dataset}_results.json'
 
