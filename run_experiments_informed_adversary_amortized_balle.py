@@ -18,7 +18,7 @@ parser.add_argument('--expe_id', type=int, default=0)
 args = parser.parse_args()
 expe_id=args.expe_id
 
-list_N_samples = [500, 1000]#[100]
+list_N_samples = [2000, 5000]#[100]
 list_N_trees = [10]
 list_epsilon = [1000,30,20,10,5,1,0.1]
 list_obj_active = [1]
@@ -118,8 +118,16 @@ reconstructor = train_reconstructor(
         n_threads=n_threads
     )
 #######################################################
+
+# If N_samples is small enough, reconstruct all examples
+if N_samples <= 1000:
+    subsampled_examples = list(range(N_samples))
+else:
+    subsampled_examples = np.random.choice(range(N_samples), size=200, replace=False)
+
+    
 # Solve the reconstruction problem
-for ex_id in range(N_samples):
+for ex_id in subsampled_examples:
     
     # TRAIN THE RECONSTRUCTION NETWORK (using data from the same distribution == the very large test set is fine)
     mask = np.array([i for i in range(N_samples) if i != ex_id])
