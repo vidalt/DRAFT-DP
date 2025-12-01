@@ -16,13 +16,13 @@ parser.add_argument('--expe_id', type=int, default=0)
 args = parser.parse_args()
 expe_id=args.expe_id
 
-list_N_samples = [2000, 5000] 
+list_N_samples = [10000, 20000] 
 list_N_trees = [10]
 list_epsilon = [0.1, 1, 5, 10, 20, 30, 1000]
 list_obj_active = [1]
 list_depth = [5]
 list_seed = [0,1,2,3,4]
-list_datasets = ['compas' ,'default_credit', 'adult']
+list_datasets = ['default_credit', 'adult', 'compas'] #
 target_ratio_divisors = [0.01] 
 list_config = []
 
@@ -34,6 +34,8 @@ for obj_active_bool in list_obj_active:
                     for dataset in list_datasets:
                         for seed in list_seed:
                             for target_ratio_divisor in target_ratio_divisors:
+                                if dataset == 'compas' and Nsamp > 2000:
+                                    continue
                                 list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset, target_ratio_divisor])
 
 N_trees = list_config[expe_id][0]
@@ -50,6 +52,7 @@ prediction = predictions[dataset]
 target_ratio_divisor = list_config[expe_id][8]
 
 target_ratio = epsilon/target_ratio_divisor
+
 np.random.seed(seed)
 
 if verbose:
@@ -75,7 +78,7 @@ sample_size = len(X)
 X_train, X_test, y_train, y_test = data_splitting(data, prediction, sample_size - N_samples, seed)
 
 # Creation of a DP RF
-clf = DP_RF(path, dataset, N_samples, N_trees, ohe_groups, depth, seed, verbosity)
+clf = DP_RF(path, dataset, N_samples, N_trees, ohe_groups, depth, seed, verbosity, seed_noise=seed)
 clf.fit(X_train,y_train)
 
 # Store the unnnoised RF
@@ -85,7 +88,6 @@ clf.add_noise(epsilon)
 
 #print(clf_unnoise.format_nb(), "(%d feuilles)" %(len(clf_unnoise.format_nb()[0])))
 #print(clf.format_nb(), "(%d feuilles)" %(len(clf.format_nb()[0])))
-
 
 accuracy_test = accuracy_score(y_test, clf.predict(X_test))
 accuracy_train = accuracy_score(y_train, clf.predict(X_train))
@@ -99,10 +101,10 @@ status_list = []
 nb_failures = 0
 
 # If N_samples is small enough, reconstruct all examples
-if N_samples <= 1000:
+if N_samples <= 100:
     subsampled_examples = list(range(N_samples))
 else:
-    subsampled_examples = np.random.choice(range(N_samples), size=200, replace=False)
+    subsampled_examples = np.random.choice(range(N_samples), size=100, replace=False)
 
 # Solve the reconstruction problem
 for ex_id in subsampled_examples:
