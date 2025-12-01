@@ -34,7 +34,7 @@ for obj_active_bool in list_obj_active:
                     for dataset in list_datasets:
                         for seed in list_seed:
                             for target_ratio_divisor in target_ratio_divisors:
-                                if dataset == 'compas' and Nsamp > 2000:
+                                if (dataset == 'compas' and Nsamp > 2000) or (dataset == 'default_credit' and Nsamp > 10000):
                                     continue
                                 list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset, target_ratio_divisor])
 

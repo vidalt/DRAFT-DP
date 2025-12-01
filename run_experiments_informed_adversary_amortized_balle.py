@@ -35,6 +35,8 @@ for obj_active_bool in list_obj_active:
                 for Nsamp in list_N_samples:
                     for dataset in list_datasets:
                         for seed in list_seed:
+                            if (dataset == 'compas' and Nsamp > 2000) or (dataset == 'default_credit' and Nsamp > 10000):
+                                continue
                             list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset])
 
 N_trees = list_config[expe_id][0]
@@ -51,7 +53,7 @@ prediction = predictions[dataset]
 
 np.random.seed(seed)
 
-if verbose:
+if True:
     print("N_trees :", N_trees)
     print("epsilon :", epsilon)
     print("N_samples :", N_samples)
@@ -123,7 +125,7 @@ reconstructor = train_reconstructor(
 if N_samples <= 1000:
     subsampled_examples = list(range(N_samples))
 else:
-    subsampled_examples = np.random.choice(range(N_samples), size=200, replace=False)
+    subsampled_examples = np.random.choice(range(N_samples), size=100, replace=False)
 
     
 # Solve the reconstruction problem
