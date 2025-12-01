@@ -18,13 +18,13 @@ parser.add_argument('--expe_id', type=int, default=0)
 args = parser.parse_args()
 expe_id=args.expe_id
 
-list_N_samples = [2000, 5000]#[100]
+list_N_samples = [10000,20000]#[100]
 list_N_trees = [10]
 list_epsilon = [1000,30,20,10,5,1,0.1]
 list_obj_active = [1]
 list_depth = [5]
 list_seed = [0,1,2,3,4]
-list_datasets = ['compas' ,'default_credit', 'adult']
+list_datasets = ['default_credit', 'adult'] #'compas' 
 
 list_config = []
 
