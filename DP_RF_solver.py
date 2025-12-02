@@ -259,15 +259,15 @@ class DP_RF_solver:
             N = N_fixed
                 
             # Variables definitions
-            nb = [[[model.NewIntVar(0, N, 'nb_%d_%d_%d' % (t, v, c)) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] 
-            delta = [[[model.NewIntVar(-bound, bound, 'delta_%d_%d_%d' % (t, v, c)) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] 
+            nb = [[[model.NewIntVar(0, N, 'nb') for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] #'nb_%d_%d_%d' % (t, v, c))
+            delta = [[[model.NewIntVar(-bound, bound, 'delta') for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] #'delta_%d_%d_%d' % (t, v, c)
             
             liste_p = []
             liste_bool = []
             
-            x = [[model.NewBoolVar('x_%d_%d' % (k,j)) for j in range(M)] for k in range(N)]
-            y = [[[[model.NewBoolVar('y_%d_%d_%d_%d' % (t,v,k,c)) for c in range(card_c)] for k in range(N)] for v in range(N_leaves)] for t in range(N_trees)]
-            z = [[model.NewBoolVar('Z_%d_%d' % (i, c)) for c in range(card_c)] for i in range(N)]
+            x = [[model.NewBoolVar('x') for j in range(M)] for k in range(N)] #'x_%d_%d' % (k,j)
+            y = [[[[model.NewBoolVar('y') for c in range(card_c)] for k in range(N)] for v in range(N_leaves)] for t in range(N_trees)] #'y_%d_%d_%d_%d' % (t,v,k,c)
+            z = [[model.NewBoolVar('Z') for c in range(card_c)] for i in range(N)] #'Z_%d_%d' % (i, c)
             
             # Assume knowledge of part of the dataset's attributes
             if not(X_known is None):
@@ -298,8 +298,8 @@ class DP_RF_solver:
                                 model.Add(z[k][c] == 0)
             # ----------------------------------------------------------------------------------------------
 
-            delta_bool_list = [[[[model.NewBoolVar(f'delta_val_{i}_{t}_{v}_{c}') for i in range(0, bound+1)] for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)]
-            abs_delta = [[[model.NewIntVar(0, bound, 'delta_%d_%d_%d' % (t, v, c)) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] 
+            delta_bool_list = [[[[model.NewBoolVar('delta_val') for i in range(0, bound+1)] for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] # f'delta_val_{i}_{t}_{v}_{c}'
+            abs_delta = [[[model.NewIntVar(0, bound, 'abs_delta') for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] # 'delta_%d_%d_%d' % (t, v, c)
                 
             if verbosity:
                 print("Created variables.")
@@ -351,7 +351,7 @@ class DP_RF_solver:
 
 
             #The values of the features align with the splits of the branch
-            ex_k_not_classified_by_leaf_v_in_tree_t = [[[model.NewBoolVar(f'ex_k_not_classified_by_leaf_v_in_tree_t{t}_{v}_{k}_{c}') for k in range(N)] for v in range(N_leaves)] for t in range(N_trees)]
+            ex_k_not_classified_by_leaf_v_in_tree_t = [[[model.NewBoolVar('ex_k_not_classified') for k in range(N)] for v in range(N_leaves)] for t in range(N_trees)] # f'ex_k_not_classified_by_leaf_v_in_tree_t{t}_{v}_{k}_{c}'
             for idx_tree, liste_branches in enumerate(trees_branches):
                 #Reverse the direction of liste_branches due to the diffprivlib numbering being reversed
                 liste_branches = liste_branches[::-1]   

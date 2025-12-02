@@ -9,14 +9,14 @@ import json
 import copy
 from sklearn.metrics import accuracy_score
 
-verbose = False 
+verbose = True 
 
 parser = argparse.ArgumentParser(description='Dataset reconstruction from random forest')
 parser.add_argument('--expe_id', type=int, default=0)
 args = parser.parse_args()
 expe_id=args.expe_id
 
-list_N_samples = [10000, 20000] 
+list_N_samples = [20000] 
 list_N_trees = [10]
 list_epsilon = [0.1, 1, 5, 10, 20, 30, 1000]
 list_obj_active = [1]
