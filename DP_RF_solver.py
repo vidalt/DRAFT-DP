@@ -257,7 +257,40 @@ class DP_RF_solver:
                 print("For N_fixed.")
 
             N = N_fixed
+
+               
+            informed = (X_partial_expe is not None and
+            y_partial_expe is not None and
+            ex_id is not None) # Whether we are in the informed adversary experiment setting
                 
+            if informed:
+                assert(X_partial_expe.shape[1] == M)
+                assert(X_partial_expe.shape[0] == N)
+                assert(y_partial_expe.shape[0] == N)
+                assert(0 <= ex_id and ex_id <= N)
+
+                # Map sklearn leaf node id -> position v used in nb_noise / nb / delta
+                num_leaves = self.get_numeros_leaves(self.clf.estimators_[0].tree_)
+                leaf_pos = {leaf_id: idx for idx, leaf_id in enumerate(num_leaves)}
+                assert len(num_leaves) == N_leaves
+
+                # known_leaf_counts[t][v][c] = number of known examples in leaf v, class c
+                known_leaf_counts = [[[0 for _ in range(card_c)]
+                                    for _ in range(N_leaves)]
+                                    for _ in range(N_trees)]
+
+                for t, est in enumerate(self.clf.estimators_):
+                    leaf_ids = est.apply(X_partial_expe)  # shape (N,)
+                    for k in range(N):
+                        if k == ex_id:
+                            continue  # unknown example, handled by y-vars
+                        v_leaf_id = leaf_ids[k]
+                        v = leaf_pos[v_leaf_id]
+                        c = int(y_partial_expe[k])
+                        known_leaf_counts[t][v][c] += 1
+            else:
+                known_leaf_counts = None
+    
             # Variables definitions
             nb = [[[model.NewIntVar(0, N, 'nb') for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] #'nb_%d_%d_%d' % (t, v, c))
             delta = [[[model.NewIntVar(-bound, bound, 'delta') for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)] #'delta_%d_%d_%d' % (t, v, c)
@@ -266,7 +299,19 @@ class DP_RF_solver:
             liste_bool = []
             
             x = [[model.NewBoolVar('x') for j in range(M)] for k in range(N)] #'x_%d_%d' % (k,j)
-            y = [[[[model.NewBoolVar('y') for c in range(card_c)] for k in range(N)] for v in range(N_leaves)] for t in range(N_trees)] #'y_%d_%d_%d_%d' % (t,v,k,c)
+            if informed:
+                # Only keep y-vars for the unknown example ex_id
+                y = [[[[None for c in range(card_c)] for k in range(N)]
+                    for v in range(N_leaves)]
+                    for t in range(N_trees)]
+                for t in range(N_trees):
+                    for v in range(N_leaves):
+                        for c in range(card_c):
+                            y[t][v][ex_id][c] = model.NewBoolVar('y')
+            else:
+                y = [[[[model.NewBoolVar('y') for c in range(card_c)] for k in range(N)]
+                    for v in range(N_leaves)]
+                    for t in range(N_trees)]
             z = [[model.NewBoolVar('Z') for c in range(card_c)] for i in range(N)] #'Z_%d_%d' % (i, c)
             
             # Assume knowledge of part of the dataset's attributes
@@ -281,12 +326,7 @@ class DP_RF_solver:
             # ----------------------------------------------------------------------------------------------
 
             # Assume knowledge of part of the dataset's examples (informed adversary experiment)
-            if not(X_partial_expe is None) and not(y_partial_expe is None) and not(ex_id is None):
-                assert(X_partial_expe.shape[1] == M)
-                assert(X_partial_expe.shape[0] == N)
-                assert(y_partial_expe.shape[0] == N)
-                assert(0 <= ex_id and ex_id <= N)
-
+            if informed:
                 for k in range(N): # fix all examples but one
                     if k != ex_id: # ex_id
                         for j in range(M): 
@@ -340,24 +380,41 @@ class DP_RF_solver:
             #for k in range(N):
             #    for c in range(card_c):
             #        model.Add(sum(y[t][v][k][c] for t in range(N_trees) for v in range(N_leaves)) == 0).OnlyEnforceIf(z[k][c].Not())
-            # Alternative, stronger formulation:
+            
             for t in range(N_trees):
                 for k in range(N):
                     for c in range(card_c):
+                        if informed and k != ex_id:
+                            # For known examples, z[k][c] is already fixed from y_partial_expe
+                            continue
                         model.Add(sum(y[t][v][k][c] for v in range(N_leaves)) == z[k][c])
+
                     
             if verbosity:
                 print("Created other constraints.")
 
 
             #The values of the features align with the splits of the branch
-            ex_k_not_classified_by_leaf_v_in_tree_t = [[[model.NewBoolVar('ex_k_not_classified') for k in range(N)] for v in range(N_leaves)] for t in range(N_trees)] # f'ex_k_not_classified_by_leaf_v_in_tree_t{t}_{v}_{k}_{c}'
-            for idx_tree, liste_branches in enumerate(trees_branches):
+            if informed:
+                # Only allocate for the unknown example
+                ex_k_not_classified_by_leaf_v_in_tree_t = [[[None for _ in range(N)]
+                                                            for _ in range(N_leaves)]
+                                                        for _ in range(N_trees)]
+                for t in range(N_trees):
+                    for v in range(N_leaves):
+                        ex_k_not_classified_by_leaf_v_in_tree_t[t][v][ex_id] = model.NewBoolVar('ex_k_not_classified')
+            else:
+                ex_k_not_classified_by_leaf_v_in_tree_t = [[[model.NewBoolVar('ex_k_not_classified') for _ in range(N)]
+                                                            for _ in range(N_leaves)]
+                                                        for _ in range(N_trees)]
                 #Reverse the direction of liste_branches due to the diffprivlib numbering being reversed
                 liste_branches = liste_branches[::-1]   
                 for idx_branch, branche in enumerate(liste_branches):
                     #print("idx_branch :", idx_branch, "branche :", branche)
                     for k in range(N):
+                        if informed and k != ex_id:
+                            # Known examples have fixed features; we don't need per-branch boolean machinery for them
+                            continue
                         for feature in branche[0]:
                             model.Add(cp_model.LinearExpr.Sum(y[idx_tree][idx_branch][k]) == 0).OnlyEnforceIf(ex_k_not_classified_by_leaf_v_in_tree_t[idx_tree][idx_branch][k])
                             if feature > 0:
@@ -368,11 +425,23 @@ class DP_RF_solver:
             if verbosity:
                 print("Created other constraints bis.")
 
-            #The counts correspond to the number of assigned examples
+            # The counts correspond to the number of assigned examples
             for t in range(N_trees):
                 for v in range(N_leaves):
                     for c in range(card_c):
-                        model.Add(sum(y[t][v][k][c] for k in range(N)) == nb[t][v][c])
+                        if informed:
+                            # known_leaf_counts includes all k != ex_id
+                            base = known_leaf_counts[t][v][c]
+                            # unknown example contributes at most 1 here
+                            # (if y[t][v][ex_id][c] is None, that means this class cannot occur here)
+                            y_var = y[t][v][ex_id][c]
+                            if y_var is not None:
+                                model.Add(base + y_var == nb[t][v][c])
+                            else:
+                                # No variable for this (t,v,c) for ex_id: only known examples contribute
+                                model.Add(nb[t][v][c] == base)
+                        else:
+                            model.Add(sum(y[t][v][k][c] for k in range(N)) == nb[t][v][c])
             
             if verbosity:
                 print("Created other constraints ter.")
@@ -394,7 +463,7 @@ class DP_RF_solver:
         solver.parameters.random_seed = seed
 
         if obj_active:
-            if not(X_partial_expe is None) and not(y_partial_expe is None) and not(ex_id is None):
+            if informed:
                 # For informed adversary experiment
                 # Add a regularization term encouraging proximity of the reconstructed example to the others
                 list_l1_bools = []
@@ -473,13 +542,13 @@ class DP_RF_solver:
             #if verbosity:
             #    print("x_sol :", x)
             
-            y = [[[solver.Value(y[t][v][k][c]) for c in range(card_c)] for k in range(N)] for v in range(N_leaves) for t in range(N_trees)]
+            #y = [[[solver.Value(y[t][v][k][c]) for c in range(card_c)] for k in range(N)] for v in range(N_leaves) for t in range(N_trees)]
             #print("y :", y)
             
             z = [[solver.Value(z[k][c]) for c in range(card_c)] for k in range(N)]
             #print("z :", z)
                     
-            ex_k_not_classified_by_leaf_v_in_tree_t = [[[solver.Value(ex_k_not_classified_by_leaf_v_in_tree_t[t][v][k]) for k in range(N)] for v in range(N_leaves)] for t in range(N_trees)]
+            #ex_k_not_classified_by_leaf_v_in_tree_t = [[[solver.Value(ex_k_not_classified_by_leaf_v_in_tree_t[t][v][k]) for k in range(N)] for v in range(N_leaves)] for t in range(N_trees)]
             #print("ex_k_not_classified_by_leaf_v_in_tree_t :", ex_k_not_classified_by_leaf_v_in_tree_t)
                 
             #print("delta:", [[[solver.Value(delta[t][v][c]) for c in range(card_c)] for v in range(N_leaves)] for t in range(N_trees)])
