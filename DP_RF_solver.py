@@ -128,7 +128,7 @@ class DP_RF_solver:
         return trees_branches
     
     def fit(self, N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_known = None, known_attributes=[], N_max_upper_bound=400,
-            X_partial_expe=None, y_partial_expe=None, ex_id=None, target_ratio=None):
+            X_partial_expe=None, y_partial_expe=None, ex_id=None, target_ratio=None, use_callback=True):
         # => X_known and known_attributes are used only for the partial reconstruction experiments
         # => X_partial_expe and y_partial_expe are used only for informed adversary experiments, in which case ex_id is the index of the example to reconstruct in X_partial_expe
         
@@ -446,7 +446,7 @@ class DP_RF_solver:
                 liste_p.extend(list_l1_coeffs) # incorporate the proximity term in the objective
             model.Maximize(cp_model.LinearExpr.WeightedSum(liste_bool, liste_p))
 
-        if N_fixed is None:   
+        if (N_fixed is None) or (not use_callback):   
             solver.Solve(model)
         else:
             # Create the callback used to log time to first solution
@@ -493,7 +493,7 @@ class DP_RF_solver:
             #if verbosity:
             #    print("Bruite :", nb_noise)
             #    print("Recons :", values_nb)
-            if N_fixed is None:
+            if (N_fixed is None) or (not use_callback):
                 self.result_dict = {'status':solver.StatusName(), 'nb_recons': values_nb, 'duration': duration, 'reconstructed_data':x, 'N_min': N_min, 'N_max': N_max, 'N' : N}
             else:
                 self.result_dict = {'status':solver.StatusName(), 'nb_recons': values_nb, 'duration': duration, 'reconstructed_data':x, 'N_min': N_min, 'N_max': N_max, 'N' : N, 'time_to_first_solution' : solcallback.time_to_first_sol, 'anytime_sols' : solcallback.sol_list, 'anytime_sols_times' : solcallback.time_list}
