@@ -9,7 +9,7 @@ import json
 import copy
 from sklearn.metrics import accuracy_score
 
-verbose = True 
+verbose = False 
 
 parser = argparse.ArgumentParser(description='Dataset reconstruction from random forest')
 parser.add_argument('--expe_id', type=int, default=0)

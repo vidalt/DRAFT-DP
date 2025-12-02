@@ -407,6 +407,9 @@ class DP_RF_solver:
                 ex_k_not_classified_by_leaf_v_in_tree_t = [[[model.NewBoolVar('ex_k_not_classified') for _ in range(N)]
                                                             for _ in range(N_leaves)]
                                                         for _ in range(N_trees)]
+            #Reverse the direction of liste_branches due to the diffprivlib numbering being reversed
+              
+            for idx_tree, liste_branches in enumerate(trees_branches):
                 #Reverse the direction of liste_branches due to the diffprivlib numbering being reversed
                 liste_branches = liste_branches[::-1]   
                 for idx_branch, branche in enumerate(liste_branches):
