@@ -109,7 +109,7 @@ else:
 # Solve the reconstruction problem
 for ex_id in subsampled_examples:
     solver = DP_RF_solver(clf, epsilon)
-    dict_res_ = solver.fit(N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_partial_expe=X_train, y_partial_expe=y_train, ex_id=ex_id, target_ratio=target_ratio, use_callback=True)
+    dict_res_ = solver.fit(N_fixed, seed, time_out, n_threads, verbosity, obj_active, X_partial_expe=X_train, y_partial_expe=y_train, ex_id=ex_id, target_ratio=target_ratio, use_callback=False)
 
     if dict_res_['status'] == 'OPTIMAL' or dict_res_['status'] == 'FEASIBLE':
         # Retrieve solving time and reconstructed data
