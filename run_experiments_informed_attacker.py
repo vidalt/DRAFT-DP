@@ -23,7 +23,7 @@ list_obj_active = [1]
 list_depth = [5]
 list_seed = [0,1,2,3,4,5,6,7,8,9]
 list_datasets = ['default_credit', 'adult', 'compas'] #
-target_ratio_divisors = [0.01] 
+target_ratio_divisors = [0.1, 0.05, 0.005] 
 list_config = []
 
 for obj_active_bool in list_obj_active:
