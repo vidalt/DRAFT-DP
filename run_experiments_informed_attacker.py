@@ -16,12 +16,12 @@ parser.add_argument('--expe_id', type=int, default=0)
 args = parser.parse_args()
 expe_id=args.expe_id
 
-list_N_samples = [20000] 
+list_N_samples = [2000, 10000,20000] 
 list_N_trees = [10]
 list_epsilon = [0.1, 1, 5, 10, 20, 30, 1000]
 list_obj_active = [1]
 list_depth = [5]
-list_seed = [0,1,2,3,4]
+list_seed = [0,1,2,3,4,5,6,7,8,9]
 list_datasets = ['default_credit', 'adult', 'compas'] #
 target_ratio_divisors = [0.01] 
 list_config = []
@@ -34,7 +34,7 @@ for obj_active_bool in list_obj_active:
                     for dataset in list_datasets:
                         for seed in list_seed:
                             for target_ratio_divisor in target_ratio_divisors:
-                                if (dataset == 'compas' and Nsamp > 2000) or (dataset == 'default_credit' and Nsamp > 10000):
+                                if (dataset == 'compas' and Nsamp != 2000) or (dataset == 'default_credit' and Nsamp != 10000) or (dataset == 'adult' and Nsamp != 20000):
                                     continue
                                 list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset, target_ratio_divisor])
 

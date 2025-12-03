@@ -18,13 +18,13 @@ parser.add_argument('--expe_id', type=int, default=0)
 args = parser.parse_args()
 expe_id=args.expe_id
 
-list_N_samples = [10000,20000]#[100]
+list_N_samples = [2000,10000,20000]#[100]
 list_N_trees = [10]
 list_epsilon = [1000,30,20,10,5,1,0.1]
 list_obj_active = [1]
 list_depth = [5]
-list_seed = [0,1,2,3,4]
-list_datasets = ['default_credit', 'adult'] #'compas' 
+list_seed = [0,1,2,3,4,5,6,7,8,9]
+list_datasets = ['default_credit', 'adult', 'compas'] 
 
 list_config = []
 
@@ -35,7 +35,7 @@ for obj_active_bool in list_obj_active:
                 for Nsamp in list_N_samples:
                     for dataset in list_datasets:
                         for seed in list_seed:
-                            if (dataset == 'compas' and Nsamp > 2000) or (dataset == 'default_credit' and Nsamp > 10000):
+                            if (dataset == 'compas' and Nsamp != 2000) or (dataset == 'default_credit' and Nsamp != 10000) or (dataset == 'adult' and Nsamp != 20000):
                                 continue
                             list_config.append([Ntrees, epsi, Nsamp, obj_active_bool, f"data/{dataset}.csv", seed,depth, dataset])
 
@@ -53,7 +53,7 @@ prediction = predictions[dataset]
 
 np.random.seed(seed)
 
-if True:
+if verbose:
     print("N_trees :", N_trees)
     print("epsilon :", epsilon)
     print("N_samples :", N_samples)
